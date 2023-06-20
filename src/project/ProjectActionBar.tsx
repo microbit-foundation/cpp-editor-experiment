@@ -29,11 +29,12 @@ const ProjectActionBar = React.forwardRef(
         px={isWideScreen ? 10 : 5}
       >
         <SendButton size={size} ref={ref} sendButtonRef={sendButtonRef} />
-        <HStack spacing={2.5}>
+
+        {/* <HStack spacing={2.5}>
           <SaveMenuButton size={size} />
-          {/* Min-width to avoid collapsing when out of space. Needs some work on responsiveness of the action bar. */}
+          
           <OpenButton mode="button" size={size} minW="fit-content" />
-        </HStack>
+        </HStack> */}
       </HStack>
     );
   }
