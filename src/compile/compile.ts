@@ -24,12 +24,15 @@ export class CODALCompiler implements Compiler {
 
     private compiling : boolean = false;
 
+    private hex : Uint8Array = new Uint8Array();
+
     private handleWorkerMessage(e : MessageEvent<any>) {
         if(this.errorComing){
             console.log("[CODAL] error coming true");
             // removeErrors();
             // if (e.data.includes("error"))showError(e.data);
             this.errorComing = false;
+            // this.compiling = false;
             return;
         }
         if(this.completionComing){
@@ -60,6 +63,7 @@ export class CODALCompiler implements Compiler {
                 break;
             default:
                 console.log("[CODAL] Compile Complete");
+                this.hex = e.data;
                 this.compiling = false;
                 // removeErrors();
                 // if(document.getElementById("connect").disabled && daplink) hexCode = e.data;
@@ -81,14 +85,23 @@ export class CODALCompiler implements Compiler {
 
         this.compiling = true;
         this.llvmWorker.postMessage(map);
-     
-        //return success status
+
+        //Shouldn't do this :/
+        while(this.compiling) {
+            await new Promise<void>(resolve => {
+                setTimeout(() => {resolve();}, 1);
+            })
+        }
+
+        console.log(this.hex);
+        console.log(this.hex2ascii(this.toHexString(this.hex)));
+
         return true;
     }
 
     async getHex() : Promise<Uint8Array> {
-        return asciiToBytes(await this.decodeFile(text));
-        // return this.llvm.getHex();
+        // return asciiToBytes(await this.decodeFile(text));
+        return asciiToBytes(this.hex2ascii(this.toHexString(this.hex)));
     }
 
     //temporary
@@ -97,4 +110,19 @@ export class CODALCompiler implements Compiler {
         .then(t => t.text())
         .then(t => {return t})
     } 
+
+    private toHexString(byteArray : any) {
+        return Array.prototype.map.call(byteArray, function(byte) {
+            return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+        }).join('');
+    }
+    
+    // Convert hex to ascii hex (ihex). Format read by the microbit.
+    private hex2ascii(hexx : any) {
+        var hex = hexx.toString()
+        var str = '';
+        for (var i = 0; i < hex.length; i += 2)
+            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        return str;
+    }
 }
