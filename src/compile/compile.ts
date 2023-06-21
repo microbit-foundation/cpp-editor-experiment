@@ -6,7 +6,7 @@ import { baseUrl } from "../base";
 // import { LLVM } from "../codal-wasm/llvm-worker"
 
 export interface Compiler {
-    compile() : Promise<boolean>
+    compile(files : Record<string, Uint8Array>) : Promise<boolean>
 
     getHex() : Promise<Uint8Array>
 }
@@ -22,7 +22,9 @@ export class CODALCompiler implements Compiler {
     private errorComing : boolean = false;
     private completionComing : boolean = false;
 
-    private handleWorkerMessage(e : MessageEvent) {
+    private compiling : boolean = false;
+
+    private handleWorkerMessage(e : MessageEvent<any>) {
         if(this.errorComing){
             console.log("[CODAL] error coming true");
             // removeErrors();
@@ -48,7 +50,7 @@ export class CODALCompiler implements Compiler {
             case "busy":        console.log("[CODAL] Downloading");   break;
             case "headers":     console.log("[CODAL] Headers");       break;
             case "ready":
-                console.log("[CODAL] COMPILE READY"); 
+                console.log("[CODAL] Compile Ready"); 
                 break;
             case "error":
                 this.errorComing = true;
@@ -57,7 +59,8 @@ export class CODALCompiler implements Compiler {
                 this.completionComing = true;
                 break;
             default:
-                console.log("[CODAL] Compile complete");
+                console.log("[CODAL] Compile Complete");
+                this.compiling = false;
                 // removeErrors();
                 // if(document.getElementById("connect").disabled && daplink) hexCode = e.data;
                 // else download(hex2ascii(toHexString(e.data)),"MICROBIT.hex");   // Determine IF flash or just download here.
@@ -66,11 +69,20 @@ export class CODALCompiler implements Compiler {
         }
     }
 
-    async compile() : Promise<boolean> {
+    async compile(files : Record<string, Uint8Array>) : Promise<boolean> {
+        // for (let f in files) {
+        //     console.log(f.toString())
+        // }
+
         const file = await this.decodeFile(maincpp);
 
-        this.llvmWorker.postMessage({"main.cpp":file});
+        var map = new Map();
+        map.set("main.cpp", file);
 
+        this.compiling = true;
+        this.llvmWorker.postMessage(map);
+     
+        //return success status
         return true;
     }
 
