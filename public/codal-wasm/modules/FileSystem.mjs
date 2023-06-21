@@ -26,12 +26,13 @@
 
 import EmProcess from "./EmProcess.mjs";
 import WasmPackageModule from "./wasm/wasm-package.mjs";
-import createLazyFile from "./emscripten/createLazyFile.mjs"
 import BrotliProcess from "./BrotliProcess.mjs";
+import createLazyFile from "./emscripten/createLazyFile.mjs"
 
 export default class FileSystem extends EmProcess {
     _brotli = null;
     _cache = null;
+    init = false;
 
     constructor({ cache = "/cache", ...opts } = {}) {
         super(WasmPackageModule, { ...opts });
@@ -40,7 +41,7 @@ export default class FileSystem extends EmProcess {
 
     #init = async (cache, opts) => {
         await this;
-        this._brotli = new BrotliProcess({ FS: this.FS, ...opts});
+        this._brotli = await new BrotliProcess({ FS: this.FS, ...opts});
         this._cache = (async () => {
             while (cache.endsWith("/")) {
                 cache = cache.slice(0, -1);
@@ -48,30 +49,35 @@ export default class FileSystem extends EmProcess {
             if (this.exists(cache)) return cache;
             this.persist(cache);
             await this.pull();
+            this.init = true;
             return cache;
         })();
     }
 
     async unpack(...paths) {
+        console.log(this._brotli);
         return Promise.all(paths.flat().map(async (path) => {
             postMessage("download")
             let file = await fetch(path);
             let buffer = new Uint8Array(await file.arrayBuffer());
-            
+
             postMessage("populate")
             if (path.endsWith(".br")) {
                 // it's a brotli file, decompress it
-                this.FS.writeFile("/tmp/archive.pack.br", buffer);
+                await this.FS.writeFile("/tmp/archive.pack.br", buffer);
+                
+                // Ensure initialisation has happened (should await on wasm module here, but this can be difficult)
+                while (this.init===false) {await new Promise(r => setTimeout(r, 10))};
+
                 await this._brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
                 await this.FS.unlink("/tmp/archive.pack.br");
             } else {
-                this.FS.writeFile("/tmp/archive.pack", buffer);
+                await this.FS.writeFile("/tmp/archive.pack", buffer);
             }
             await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
             await this.FS.unlink("/tmp/archive.pack");
             
-            //Brotli isnt used after this.
-            delete this._brotli;
+            //Brotli isnt used after this.S
         }));
     }
 

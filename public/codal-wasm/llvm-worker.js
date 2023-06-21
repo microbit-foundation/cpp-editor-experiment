@@ -25,7 +25,7 @@ class LLVM {
 
         postMessage("wasm");
         const tools = {
-            "clang": new LlvmBoxProcess(processConfig),
+            "llvm-box": new LlvmBoxProcess(processConfig),
         };
         this.tools = tools;
 
@@ -55,11 +55,9 @@ class LLVM {
     onstderr = () => {};
 
     async run(...args) {
-        let tool_name = args[0].replace('++','');   //Allows clang++
-
-        await this.tools[tool_name];
+        await this.tools["llvm-box"];
         
-        return await this.tools[tool_name].exec(args, {
+        return await this.tools["llvm-box"].exec(args, {
             print: (...args) => this.onstdout(...args),
             printErr: (...args) => this.onstderr(...args),
             cwd: "/working"
