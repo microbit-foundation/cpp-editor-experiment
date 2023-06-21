@@ -65,6 +65,7 @@ export class CODALCompiler implements Compiler {
                 console.log("[CODAL] Compile Complete");
                 this.hex = e.data;
                 this.compiling = false;
+                console.log(e.data);
                 // removeErrors();
                 // if(document.getElementById("connect").disabled && daplink) hexCode = e.data;
                 // else download(hex2ascii(toHexString(e.data)),"MICROBIT.hex");   // Determine IF flash or just download here.
