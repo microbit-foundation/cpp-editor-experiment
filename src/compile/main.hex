@@ -4,5 +4,5 @@ MicroBit uBit;
 
 int main() {
     uBit.init();
-    uBit.display.scroll("Hello World");
+    uBit.display.scroll("hello world");
 }

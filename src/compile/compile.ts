@@ -1,9 +1,5 @@
-import text from "./microbit-test.hex";
 import maincpp from "./main.hex";   //hex file because txt or cpp want working :/ (its temporary anyway)
-import { asciiToBytes } from "../fs/fs-util";
 import { baseUrl } from "../base";
-
-// import { LLVM } from "../codal-wasm/llvm-worker"
 
 export interface Compiler {
     compile(files : Record<string, Uint8Array>) : Promise<boolean>
@@ -65,7 +61,6 @@ export class CODALCompiler implements Compiler {
                 console.log("[CODAL] Compile Complete");
                 this.hex = e.data;
                 this.compiling = false;
-                console.log(e.data);
                 // removeErrors();
                 // if(document.getElementById("connect").disabled && daplink) hexCode = e.data;
                 // else download(hex2ascii(toHexString(e.data)),"MICROBIT.hex");   // Determine IF flash or just download here.
@@ -94,15 +89,11 @@ export class CODALCompiler implements Compiler {
             })
         }
 
-        console.log(this.hex);
-        console.log(this.hex2ascii(this.toHexString(this.hex)));
-
         return true;
     }
 
     async getHex() : Promise<Uint8Array> {
-        // return asciiToBytes(await this.decodeFile(text));
-        return asciiToBytes(this.hex2ascii(this.toHexString(this.hex)));
+        return this.hex;
     }
 
     //temporary
