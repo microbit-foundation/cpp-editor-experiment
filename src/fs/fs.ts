@@ -20,7 +20,7 @@ import { Host } from "./host";
 import { PythonProject } from "./initial-project";
 import { FSStorage } from "./storage";
 
-import { CODALCompiler } from "../compile/compile";
+import { CODALCompiler, Compiler } from "../compile/compile";
 
 const commonFsSize = 20 * 1024;
 
@@ -164,6 +164,7 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   project: Project;
 
   private langPython: boolean = false;
+  private compiler : Compiler;
 
   constructor(
     private logging: Logging,
@@ -177,6 +178,8 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
       id: generateId(),
       name: undefined,
     };
+
+    this.compiler = new CODALCompiler();
   }
 
   /**
@@ -449,11 +452,9 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   //      - Then also handle the compilation
   async fullFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
-      const compiler = new CODALCompiler(); //need a way to init this globally later on
-      
       try {
-        await compiler.compile();
-        return asciiToBytes(await compiler.getHex());
+        await this.compiler.compile();
+        return await this.compiler.getHex();
 
       } catch (e: any) {
         throw new HexGenerationError(e.message);  
@@ -470,11 +471,9 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
 
   async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
-      const compiler = new CODALCompiler(); //need a way to init this globally later on
-      
       try {
-        await compiler.compile();
-        return asciiToBytes(await compiler.getHex());
+        await this.compiler.compile();
+        return await this.compiler.getHex();
 
       } catch (e: any) {
         throw new HexGenerationError(e.message);  

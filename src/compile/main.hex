@@ -1,0 +1,8 @@
+#include "Microbit.h"
+
+MicroBit uBit;
+
+int main() {
+    uBit.init();
+    uBit.display.scroll("Hello World");
+}
