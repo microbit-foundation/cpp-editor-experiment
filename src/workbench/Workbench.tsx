@@ -130,61 +130,58 @@ const Workbench = () => {
   const deployment = useDeployment();
   const Compliance = deployment.Compliance ?? (() => null);
 
-  // return (
-  //   <Flex className="WorkbenchContainer" flexDir="column">
-  //     {!inIframe() && (
-  //       <Compliance
-  //         zIndex={zIndexAboveDialogs}
-  //         externalLinkIcon={RiExternalLinkLine}
-  //       />
-  //     )}
-  //     <Flex className="Workbench">
-  //       <SplitView
-  //         direction="row"
-  //         width="100%"
-  //         minimums={minimums}
-  //         initialSize={Math.min(
-  //           700,
-  //           Math.max(
-  //             minimums[0],
-  //             Math.floor(window.innerWidth * sidebarToWidthRatio)
-  //           )
-  //         )}
-  //         compactSize={86}
-  //         mode={sidebarShown ? "open" : "compact"}
-  //       >
-  //         <SplitViewSized>
-  //           <SideBar
-  //             as="section"
-  //             aria-label={intl.formatMessage({ id: "sidebar" })}
-  //             selectedFile={selection.file}
-  //             onSelectedFileChanged={setSelectedFile}
-  //             flex="1 1 100%"
-  //             shown={sidebarShown}
-  //             tabIndex={tabIndex}
-  //             onTabIndexChange={setTabIndex}
-  //             onSidebarCollapse={handleSidebarCollapse}
-  //             onSidebarExpand={handleSidebarExpand}
-  //           />
-  //         </SplitViewSized>
-  //         <SplitViewDivider />
-  //         <SplitViewRemainder>
-  //           <EditorWithSimulator
-  //             editor={editor}
-  //             onSimulatorHide={handleSimulatorHide}
-  //             simulatorShown={simulatorShown}
-  //             showSimulatorButtonRef={simulatorButtonRef}
-  //             simFocus={simFocus}
-  //           />
-  //         </SplitViewRemainder>
-  //       </SplitView>
-  //     </Flex>
-  //     <Overlay />
-  //   </Flex>
-  // );
   return (
-    <Editor editor={editor}></Editor>
-  )
+    <Flex className="WorkbenchContainer" flexDir="column">
+      {!inIframe() && (
+        <Compliance
+          zIndex={zIndexAboveDialogs}
+          externalLinkIcon={RiExternalLinkLine}
+        />
+      )}
+      <Flex className="Workbench">
+        <SplitView
+          direction="row"
+          width="100%"
+          minimums={minimums}
+          initialSize={Math.min(
+            700,
+            Math.max(
+              minimums[0],
+              Math.floor(window.innerWidth * sidebarToWidthRatio)
+            )
+          )}
+          compactSize={86}
+          mode={sidebarShown ? "open" : "compact"}
+        >
+          <SplitViewSized>
+            <SideBar
+              as="section"
+              aria-label={intl.formatMessage({ id: "sidebar" })}
+              selectedFile={selection.file}
+              onSelectedFileChanged={setSelectedFile}
+              flex="1 1 100%"
+              shown={sidebarShown}
+              tabIndex={tabIndex}
+              onTabIndexChange={setTabIndex}
+              onSidebarCollapse={handleSidebarCollapse}
+              onSidebarExpand={handleSidebarExpand}
+            />
+          </SplitViewSized>
+          <SplitViewDivider />
+          <SplitViewRemainder>
+            <EditorWithSimulator
+              editor={editor}
+              onSimulatorHide={handleSimulatorHide}
+              simulatorShown={simulatorShown}
+              showSimulatorButtonRef={simulatorButtonRef}
+              simFocus={simFocus}
+            />
+          </SplitViewRemainder>
+        </SplitView>
+      </Flex>
+      <Overlay />
+    </Flex>
+  );
 };
 
 interface EditorProps {
