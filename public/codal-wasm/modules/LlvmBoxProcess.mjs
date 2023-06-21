@@ -2,7 +2,8 @@ import BoxProcess from "./BoxProcess.mjs";
 import LlvmBoxModule from "./emscripten/llvm-box.mjs";
 
 const tool_mapping = {
-    "clang++": "clang"
+    "clang++": "clang",
+    "ld.lld": "lld",
 };
 
 export default class LlvmBoxProcess extends BoxProcess {

@@ -55,7 +55,6 @@ export default class FileSystem extends EmProcess {
     }
 
     async unpack(...paths) {
-        console.log(this._brotli);
         return Promise.all(paths.flat().map(async (path) => {
             postMessage("download")
             let file = await fetch(path);

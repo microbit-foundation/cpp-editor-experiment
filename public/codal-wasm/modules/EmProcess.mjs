@@ -111,7 +111,7 @@ export default class EmProcess extends Process {
 
     async exec(args, opts = {}) {
         if ((typeof args) === "string") args = args.split(/ +/g);
-        
+
         // Clang's driver uses global state, and this might not be the first time we run the module.
         // Reinitialize the memory to its initial state to reset the global state.
         this._module.HEAPU8.fill(0);
