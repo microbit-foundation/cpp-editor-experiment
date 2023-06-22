@@ -30,11 +30,11 @@ const ProjectActionBar = React.forwardRef(
       >
         <SendButton size={size} ref={ref} sendButtonRef={sendButtonRef} />
 
-        {/* <HStack spacing={2.5}>
+        <HStack spacing={2.5}>
           <SaveMenuButton size={size} />
           
           <OpenButton mode="button" size={size} minW="fit-content" />
-        </HStack> */}
+        </HStack>
       </HStack>
     );
   }
