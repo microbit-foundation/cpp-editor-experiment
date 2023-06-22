@@ -453,6 +453,7 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   //      - Then also handle the compilation
   async fullFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
+      console.log("full")
       let success = await this.compiler.compile(await this.files());
 
       if(success) return await this.compiler.getHex();
@@ -469,10 +470,11 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
 
   async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
-        let success = await this.compiler.compile(await this.files());
+      console.log("partial")
+      let success = await this.compiler.compile(await this.files());
 
-        if(success) return await this.compiler.getHex();
-        else throw new HexGenerationError("Compilation failed");
+      if(success) return await this.compiler.getHex();
+      else throw new HexGenerationError("Compilation failed");
     }
 
     try {

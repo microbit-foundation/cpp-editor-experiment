@@ -69,11 +69,6 @@ export class CODALCompiler implements Compiler {
     }
 
     async compile(files : Record<string, Uint8Array>) : Promise<boolean> {
-        for (let f in files) {
-            console.log(f.toString())
-            console.log(files[f].toString())
-        }
-
         this.compiling = true;
         this.llvmWorker.postMessage(files);
 
@@ -89,20 +84,5 @@ export class CODALCompiler implements Compiler {
 
     async getHex() : Promise<Uint8Array> {
         return this.hex;
-    }
-
-    private toHexString(byteArray : any) {
-        return Array.prototype.map.call(byteArray, function(byte) {
-            return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-        }).join('');
-    }
-    
-    // Convert hex to ascii hex (ihex). Format read by the microbit.
-    private hex2ascii(hexx : any) {
-        var hex = hexx.toString()
-        var str = '';
-        for (var i = 0; i < hex.length; i += 2)
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-        return str;
     }
 }
