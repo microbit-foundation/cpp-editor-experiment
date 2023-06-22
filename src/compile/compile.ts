@@ -1,4 +1,3 @@
-import maincpp from "./main.hex";   //hex file because txt or cpp want working :/ (its temporary anyway)
 import { baseUrl } from "../base";
 
 export interface Compiler {
@@ -75,13 +74,8 @@ export class CODALCompiler implements Compiler {
             console.log(files[f].toString())
         }
 
-        const file = await this.decodeFile(maincpp);
-
-        var map = new Map();
-        map.set("main.cpp", file);
-
         this.compiling = true;
-        this.llvmWorker.postMessage(map);
+        this.llvmWorker.postMessage(files);
 
         //Shouldn't do this :/
         while(this.compiling) {
@@ -96,13 +90,6 @@ export class CODALCompiler implements Compiler {
     async getHex() : Promise<Uint8Array> {
         return this.hex;
     }
-
-    //temporary
-    async decodeFile(raw : any) {
-        return fetch(raw)
-        .then(t => t.text())
-        .then(t => {return t})
-    } 
 
     private toHexString(byteArray : any) {
         return Array.prototype.map.call(byteArray, function(byte) {

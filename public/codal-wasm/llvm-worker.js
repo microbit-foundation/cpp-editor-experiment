@@ -71,6 +71,12 @@ class LLVM {
         return Uint8Array.from(arr);
     };
 
+    async saveFiles(files) {
+        for (let f in files) {
+            this.saveFile(f, files[f]);
+        }
+    }
+
     async saveFile(name, contents){
         await this.fileSystem.writeFile('/working/'+name,contents);
     };
@@ -108,14 +114,16 @@ const includeConst = ['-I/include','-I/include/arm-none-eabi-c++/c++/10.3.1',
 async function compileCode(fileArray) {
     console.time('Compile: ')
     //Compilation step using clang.wasm module. Mostly copied from microbit-v2-samples final compilation step with some extra flags to supress clang warnings.  
-    let fileName = fileArray.next().value;
+    let fileName;
     let filesToLink = [];
     let allFiles = [];
     let clangerr = false;
-    while (fileName!=null){
+
+    for(let f in fileArray) {
+        fileName = fileArray[f];
         allFiles.push(fileName);
+        console.log(fileName)
         if(fileName.includes(".cpp")){
-            console.log(fileName)
             let clangOutput = await llvm.run('clang++','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
             '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
             '-fwrapv','-fno-rtti','-fno-threadsafe-statics','-fno-exceptions','-fno-unwind-tables','-Wno-array-bounds','-include', '/include/codal_extra_definitions.h',
@@ -131,8 +139,7 @@ async function compileCode(fileArray) {
             }
             filesToLink.push(fileName+".obj");
         }
-        fileName = fileArray.next().value;
-    };
+    }
     console.timeEnd('Compile: ')
 
     console.time('Link: ');
@@ -228,17 +235,13 @@ onmessage = async(e) => {
     postMessage("busy");
 
     if(e.data[0] == "completion"){
-        e.data[2].forEach(async (element, index) => {
-            await llvm.saveFile(index, element);
-        });
+        llvm.saveFiles(e.data[2]);
         postMessage("completions")
         postMessage(await clangCompletion(e.data));
     }
     else{
-        e.data.forEach(async (element, index) => {
-            await llvm.saveFile(index, element);
-        });
-        postMessage(await compileCode(e.data.keys()));
+        llvm.saveFiles(e.data);
+        postMessage(await compileCode(Object.keys(e.data)));
     }
     postMessage("ready");
 }
