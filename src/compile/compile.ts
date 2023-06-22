@@ -70,9 +70,10 @@ export class CODALCompiler implements Compiler {
     }
 
     async compile(files : Record<string, Uint8Array>) : Promise<boolean> {
-        // for (let f in files) {
-        //     console.log(f.toString())
-        // }
+        for (let f in files) {
+            console.log(f.toString())
+            console.log(files[f].toString())
+        }
 
         const file = await this.decodeFile(maincpp);
 

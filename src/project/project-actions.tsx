@@ -65,6 +65,7 @@ import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
 import NewFileNameQuestion from "./NewFileNameQuestion";
 import { DefaultedProject } from "./project-hooks";
 import {
+  ensureCppExtension,
   ensurePythonExtension,
   isPythonFile,
   validateNewFilename,
@@ -678,7 +679,8 @@ export class ProjectActions {
         type: "create-file",
       });
       try {
-        const filename = ensurePythonExtension(filenameWithoutExtension);
+        // const filename = ensurePythonExtension(filenameWithoutExtension);
+        const filename = ensureCppExtension(filenameWithoutExtension);
         await this.fs.write(
           filename,
           "# Your new file!",

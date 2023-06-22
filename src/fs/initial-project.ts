@@ -32,15 +32,14 @@ export const projectFilesToBase64 = (
   return files;
 };
 
-export const defaultMainFileContent = `# Imports go at the top
-from microbit import *
+export const defaultMainFileContent = `#include "MicroBit.h"
 
+MicroBit uBit;
 
-# Code in a 'while True:' loop repeats forever
-while True:
-    display.show(Image.HEART)
-    sleep(1000)
-    display.scroll('Hello')
+int main() {
+    uBit.init();
+    uBit.display.scroll("hello world");
+}
 `;
 
 export const defaultInitialProject: PythonProject = {

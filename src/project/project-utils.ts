@@ -11,11 +11,17 @@ import { InputValidationResult } from "../common/InputDialog";
 export const isPythonFile = (filename: string) =>
   getLowercaseFileExtension(filename) === "py";
 
+export const isCppFile = (filename: string) =>
+  getLowercaseFileExtension(filename) === "cpp";
+
 export const ensurePythonExtension = (filename: string) =>
   isPythonFile(filename) ? filename : `${filename}.py`;
 
+export const ensureCppExtension = (filename: string) =>
+  isCppFile(filename) ? filename : `${filename}.cpp`;
+
 // For now at least.
-export const isEditableFile = isPythonFile;
+export const isEditableFile = isPythonFile || isCppFile;
 
 /**
  * Constraints:

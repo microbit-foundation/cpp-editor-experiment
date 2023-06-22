@@ -137,7 +137,8 @@ export const diff = (before: Project, after: Project): FileChange[] => {
 
 export const EVENT_PROJECT_UPDATED = "project_updated";
 export const EVENT_TEXT_EDIT = "file_text_updated";
-export const MAIN_FILE = "main.py";
+// export const MAIN_FILE = "main.py";
+export const MAIN_FILE = "main.cpp";
 
 export const isNameLengthValid = (filename: string): boolean =>
   // This length is enforced by the underlying FS so we check it in the UI ahead of time.
