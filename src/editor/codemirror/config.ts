@@ -15,7 +15,7 @@ import {
   indentLess,
   indentMore,
 } from "@codemirror/commands";
-import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import {
   defaultHighlightStyle,
   indentOnInput,
@@ -75,6 +75,6 @@ export const editorConfig: Extension = [
   // Fixed custom extensions.
   EditorState.tabSize.of(indentSize), // But hopefully not used!
   indentUnit.of(" ".repeat(indentSize)),
-  python(),
+  cpp(),
   copyPasteSupport(),
 ];

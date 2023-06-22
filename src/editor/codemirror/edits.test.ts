@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import { EditorState } from "@codemirror/state";
 import { calculateChanges } from "./edits";
 import { CodeInsertType } from "./dnd";
@@ -31,7 +31,7 @@ describe("edits", () => {
 
     const state = EditorState.create({
       doc: initial,
-      extensions: [python()],
+      extensions: [cpp()],
     });
     const transaction = state.update(
       calculateChanges(

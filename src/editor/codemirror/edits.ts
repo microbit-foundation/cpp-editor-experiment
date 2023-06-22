@@ -5,7 +5,7 @@
  *
  * SPDX-License-Identifier: MIT
  */
-import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import { ensureSyntaxTree } from "@codemirror/language";
 import { EditorState, Text } from "@codemirror/state";
 import { SyntaxNode, Tree } from "@lezer/common";
@@ -67,7 +67,7 @@ export const calculateChanges = (
   indentLevelHint?: number,
   paste?: boolean
 ) => {
-  const parser = python().language.parser;
+  const parser = cpp().language.parser;
   const sourceTree = parser.parse(source);
   const sourceImports = topLevelImports(sourceTree, (from, to) =>
     source.slice(from, to)
