@@ -62,6 +62,8 @@ import {
   FileOperation,
 } from "./changes";
 import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
+import CreateFileQuestion from "./CreateFile";
+import FileTypeSelect from "./FileTypeSelect";
 import NewFileNameQuestion from "./NewFileNameQuestion";
 import { DefaultedProject } from "./project-hooks";
 import {
@@ -660,13 +662,13 @@ export class ProjectActions {
     const preexistingFiles = new Set(this.project.files.map((f) => f.name));
     const validate = (filename: string) =>
       validateNewFilename(filename, (f) => preexistingFiles.has(f), this.intl);
-    const filenameWithoutExtension = await this.dialogs.show<
+    const filenameWithExtension = await this.dialogs.show<
       string | undefined
     >((callback) => (
       <InputDialog
         callback={callback}
         header={this.intl.formatMessage({ id: "create-python" })}
-        Body={NewFileNameQuestion}
+        Body={CreateFileQuestion}
         initialValue=""
         actionLabel={this.intl.formatMessage({ id: "create-action" })}
         validate={validate}
@@ -674,21 +676,25 @@ export class ProjectActions {
       />
     ));
 
-    if (filenameWithoutExtension) {
+    
+
+    if (filenameWithExtension) {
       this.logging.event({
         type: "create-file",
       });
       try {
         // const filename = ensurePythonExtension(filenameWithoutExtension);
-        const filename = ensureCppExtension(filenameWithoutExtension);
+        // const filename = ensureCppExtension(filenameWithoutExtension);
+        
         await this.fs.write(
-          filename,
-          "# Your new file!",
+          filenameWithExtension,
+          // "# Your new file!",
+          "// Your new file!",
           VersionAction.INCREMENT
         );
-        this.setSelection({ file: filename, location: { line: undefined } });
+        this.setSelection({ file: filenameWithExtension, location: { line: undefined } });
         this.actionFeedback.success({
-          title: this.intl.formatMessage({ id: "created-file" }, { filename }),
+          title: this.intl.formatMessage({ id: "created-file" }, { filenameWithExtension }),
         });
       } catch (e) {
         this.actionFeedback.unexpectedError(e);
