@@ -170,8 +170,6 @@ async function compileCode(fileArray) {
 
     let output = await llvm.getHex();
 
-    console.log(await llvm.fileSystem.analyzePath("/"));
-
     //Remove files for next compile
     await Promise.all([
         // Delete added files
