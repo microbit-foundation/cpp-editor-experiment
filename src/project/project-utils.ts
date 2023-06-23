@@ -24,7 +24,7 @@ export const ensureCppExtension = (filename: string) =>
   isCppFile(filename) ? filename : `${filename}.cpp`;
 
 // For now at least.
-export const isEditableFile = isPythonFile || isCppFile || isHeaderFile;
+export const isEditableFile = (filename : string) => { return isCppFile(filename) || isHeaderFile(filename) }
 
 /**
  * Constraints:
