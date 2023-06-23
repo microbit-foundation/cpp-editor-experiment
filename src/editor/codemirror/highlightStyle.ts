@@ -21,6 +21,28 @@ import { tags } from "@lezer/highlight";
 export const highlightStyle = () => {
   const dark = "var(--chakra-colors-code-default)";
   return HighlightStyle.define([
+    // {
+    //   tag: tags.comment,
+    //   color: "var(--chakra-colors-code-comment)",
+    // },
+
+    // { tag: tags.literal, color: "var(--chakra-colors-code-literal)" },
+    // { tag: tags.string, color: "var(--chakra-colors-code-string)" },
+    // { tag: tags.keyword, color: "var(--chakra-colors-code-keyword)" },
+    // { tag: tags.name, color: dark },
+    // { tag: tags.meta, color: dark },
+    // { tag: tags.operator, color: dark },
+    // { tag: tags.punctuation, color: dark },
+
+    // We can colour these in future to indicate function and method calls
+    // but try after https://github.com/codemirror/lang-python/pull/1 is available
+    // { tag: tags.function(tags.propertyName), color: "orange" },
+    // { tag: tags.function(tags.variableName), color: "orange" },
+
+    //Modified tag highlighting for cpp
+    //Tag mapping can be found here:
+    //https://github.com/lezer-parser/cpp/blob/main/src/highlight.js
+
     {
       tag: tags.comment,
       color: "var(--chakra-colors-code-comment)",
@@ -29,15 +51,26 @@ export const highlightStyle = () => {
     { tag: tags.literal, color: "var(--chakra-colors-code-literal)" },
     { tag: tags.string, color: "var(--chakra-colors-code-string)" },
     { tag: tags.keyword, color: "var(--chakra-colors-code-keyword)" },
+
+    { tag: tags.escape, color: "darkblue"},
+
+    { tag: tags.processingInstruction, color: "purple"},
+
+    { tag: tags.modifier, color: "blue"},
+    { tag: tags.null, color: "blue"},
+    { tag: tags.self, color: "blue"},
+    { tag: tags.standard(tags.typeName), color: "blue"},
+    
+    { tag: tags.typeName, color: "teal"},
+    
+    { tag: tags.function(tags.propertyName), color: "orange"},
+    { tag: tags.function(tags.variableName), color: "orange" },
+
+    
     { tag: tags.name, color: dark },
     { tag: tags.meta, color: dark },
     { tag: tags.operator, color: dark },
     { tag: tags.punctuation, color: dark },
-
-    // We can colour these in future to indicate function and method calls
-    // but try after https://github.com/codemirror/lang-python/pull/1 is available
-    // { tag: tags.function(tags.propertyName), color: "orange" },
-    // { tag: tags.function(tags.variableName), color: "orange" },
   ]);
 };
 
