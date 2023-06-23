@@ -14,6 +14,9 @@ export const isPythonFile = (filename: string) =>
 export const isCppFile = (filename: string) =>
   getLowercaseFileExtension(filename) === "cpp";
 
+export const isHeaderFile = (filename: string) =>
+  getLowercaseFileExtension(filename) === "h";
+
 export const ensurePythonExtension = (filename: string) =>
   isPythonFile(filename) ? filename : `${filename}.py`;
 
@@ -21,7 +24,7 @@ export const ensureCppExtension = (filename: string) =>
   isCppFile(filename) ? filename : `${filename}.cpp`;
 
 // For now at least.
-export const isEditableFile = isPythonFile || isCppFile;
+export const isEditableFile = isPythonFile || isCppFile || isHeaderFile;
 
 /**
  * Constraints:
