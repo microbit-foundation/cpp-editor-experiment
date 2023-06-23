@@ -63,8 +63,6 @@ import {
 } from "./changes";
 import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
 import CreateFileQuestion from "./CreateFile";
-import FileTypeSelect from "./FileTypeSelect";
-import NewFileNameQuestion from "./NewFileNameQuestion";
 import { DefaultedProject } from "./project-hooks";
 import {
   ensureCppExtension,
