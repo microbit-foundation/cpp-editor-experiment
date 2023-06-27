@@ -86,3 +86,5 @@ export class CODALCompiler implements Compiler {
         return this.hex;
     }
 }
+
+export const compilerInstance : Compiler = new CODALCompiler();

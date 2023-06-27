@@ -20,7 +20,7 @@ import { Host } from "./host";
 import { PythonProject } from "./initial-project";
 import { FSStorage } from "./storage";
 
-import { CODALCompiler, Compiler } from "../compile/compile";
+import { compilerInstance } from "../compile/compile";
 
 const commonFsSize = 20 * 1024;
 
@@ -165,7 +165,7 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   project: Project;
 
   private langPython: boolean = false;
-  private compiler : Compiler;
+  // private compiler : Compiler;
 
   constructor(
     private logging: Logging,
@@ -180,7 +180,7 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
       name: undefined,
     };
 
-    this.compiler = new CODALCompiler();
+    // this.compiler = new CODALCompiler();
   }
 
   /**
@@ -444,8 +444,8 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   async toHexForSave(): Promise<string> {
     //const fs = await this.initialize();
     
-    let success = await this.compiler.compile(await this.files());
-    let hex = await this.toHexString(await this.compiler.getHex());
+    let success = await compilerInstance.compile(await this.files());
+    let hex = await this.toHexString(await compilerInstance.getHex());
     let ihex = await this.hex2ascii(hex);
 
     if(success) return ihex;
@@ -473,14 +473,12 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
     return this.storage.clearDirty();
   }
 
-  //TODO: - Modify to return a CODAL hex file
-  //      - Then also handle the compilation
   async fullFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
       console.log("full")
-      let success = await this.compiler.compile(await this.files());
+      let success = await compilerInstance.compile(await this.files());
 
-      if(success) return await this.compiler.getHex();
+      if(success) return await compilerInstance.getHex();
       else throw new HexGenerationError("Compilation failed");
     }
 
@@ -495,9 +493,9 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
     if (!this.langPython) {
       console.log("partial")
-      let success = await this.compiler.compile(await this.files());
+      let success = await compilerInstance.compile(await this.files());
 
-      if(success) return await this.compiler.getHex();
+      if(success) return await compilerInstance.getHex();
       else throw new HexGenerationError("Compilation failed");
     }
 
