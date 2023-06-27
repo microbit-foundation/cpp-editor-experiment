@@ -1,6 +1,7 @@
 import FileSystem from "./modules/FileSystem.mjs";
 
 import LlvmBoxProcess from "./modules/LlvmBoxProcess.mjs";
+import ClangdProcess from "./modules/ClangdProcess.mjs"
 
 class LLVM {
     constructor(){
@@ -26,6 +27,7 @@ class LLVM {
         postMessage("wasm");
         const tools = {
             "llvm-box": new LlvmBoxProcess(processConfig),
+            "clangd": new ClangdProcess(processConfig)
         };
         this.tools = tools;
 
@@ -43,6 +45,9 @@ class LLVM {
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
             '-o','MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
+        let output = await llvm.run('clangd','--help');
+        console.log(output);
+
         postMessage("ready");
     };
 
@@ -52,9 +57,11 @@ class LLVM {
     onstderr = () => {};
 
     async run(...args) {
-        await this.tools["llvm-box"];
+        let process = null;
+        if(args[0] === "clangd") process = await this.tools["clangd"]
+        else process = await this.tools["llvm-box"];
 
-        return await this.tools["llvm-box"].exec(args, {
+        return await process.exec(args, {
             print: (...args) => this.onstdout(...args),
             printErr: (...args) => this.onstderr(...args),
             cwd: "/working"
