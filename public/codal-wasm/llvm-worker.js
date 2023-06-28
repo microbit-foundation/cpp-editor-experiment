@@ -57,7 +57,7 @@ class LLVM {
             '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
             '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
-            '-o','MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
+            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
         // let output = await llvm.run('clangd','--help');
 
@@ -134,18 +134,18 @@ const includeConst = ['-I/include','-I/include/arm-none-eabi-c++/c++/10.3.1',
 '-I/libraries/codal-microbit-nrf5sdk/nRF5SDK/components/libraries/svc','-I/libraries/codal-microbit-nrf5sdk/nRF5SDK/components/libraries/log/src',
 '-I/libraries/codal-microbit-nrf5sdk/nRF5SDK/components/ble/ble_services/ble_dis']
 
+
 async function compileCode(fileArray) {
     //Compilation step using clang.wasm module. Mostly copied from microbit-v2-samples final compilation step with some extra flags to supress clang warnings.  
     let fileName;
     let filesToLink = [];
     let allFiles = [];
-    let clangerr = false;
 
     for(let f in fileArray) {
         fileName = fileArray[f];
         allFiles.push(fileName);
         if(fileName.includes(".cpp")){
-            let clangOutput = await llvm.run('clang++','-include-pch','MicroBit.h.pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
+            let clangOutput = await llvm.run('clang++','-include-pch','../include/MicroBit.h.pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
             '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
             '-fwrapv','-fno-rtti','-fno-threadsafe-statics','-fno-exceptions','-fno-unwind-tables','-Wno-array-bounds','-include', '/include/codal_extra_definitions.h',
             '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
@@ -159,14 +159,14 @@ async function compileCode(fileArray) {
                 body: clangOutput,
             })
 
-            if(clangOutput.stderr !== ""){
+            if(isError(clangOutput.stderr)){
                 postMessage({
                     type: "stderr",
                     source: "clang",
                     body: clangOutput.stderr,
                 });
 
-                clangerr = true;
+                return false;
             }
             filesToLink.push(fileName+".obj");
         }
@@ -193,12 +193,14 @@ async function compileCode(fileArray) {
         body: linkOutput,
     })
 
-    if(linkOutput.stderr !== "" && clangerr === false){ 
+    if (isError(linkOutput.stderr)) { 
         postMessage({
             type: "stderr",
             source: "linker",
             body: linkOutput.stderr,
         });
+        
+        return false;
     }
 
     //Converting MICROBIT executable to hex file. Using llvm-objcopy.wasm module.
@@ -210,24 +212,36 @@ async function compileCode(fileArray) {
         body: objOutput,
     })
 
-    let output = await llvm.getHex();
+    return true;
+}
 
+//Checks if stderr is an error and not a warning
+function isError(stderr) {
+    return stderr.includes("error:");
+}
+
+async function clean() {
     //Remove files for next compile
-    await Promise.all([
-        // Delete added files
-        allFiles.forEach(element => {
-            llvm.fileSystem.unlink('/working/'+element);
-        }),
-        // Delete compiled files
-        filesToLink.forEach(element => {
-            llvm.fileSystem.unlink('/working/'+element);
-        }),
-        // Delete executable
-        llvm.fileSystem.unlink('/working/MICROBIT'),
-        llvm.fileSystem.unlink('/working/MICROBIT.hex')
-    ]);
+    // await Promise.all([
+    //     // Delete added files
+    //     allFiles.forEach(element => {
+    //         llvm.fileSystem.unlink('/working/'+element);
+    //     }),
+    //     // Delete compiled files
+    //     filesToLink.forEach(element => {
+    //         llvm.fileSystem.unlink('/working/'+element);
+    //     }),
+    //     // Delete executable
+    //     llvm.fileSystem.unlink('/working/MICROBIT'),
+    //     llvm.fileSystem.unlink('/working/MICROBIT.hex')
+    // ]).catch(e, () => {console.error("Clean failed")});
 
-    return output;
+    let workingDir = await llvm.fileSystem.FS.analyzePath('/working/');
+    let filesToRemove = workingDir.object.contents;
+
+    for(let f in filesToRemove) {
+        await llvm.fileSystem.unlink(`/working/${f}`);
+    }
 }
 
 
@@ -291,10 +305,26 @@ onmessage = async(e) => {
     else{
         llvm.saveFiles(e.data);
         
+        let success = await compileCode(Object.keys(e.data))
+        
+        if (success) {
+            const hex = await llvm.getHex();
+            postMessage({
+                type: "hex",
+                body: hex,
+            });
+        } else {
+            postMessage({
+                type: "error",
+                body: "Compilation failed",
+            })
+        }
+
         postMessage({
-            type: "hex",
-            body: await compileCode(Object.keys(e.data)),
-        });
+            type: "compile-complete",
+        })
+
+        await clean();
     }
 }
 

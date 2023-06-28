@@ -164,9 +164,6 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   private _dirty: boolean = false;
   project: Project;
 
-  private langPython: boolean = false;
-  // private compiler : Compiler;
-
   constructor(
     private logging: Logging,
     private host: Host,
@@ -443,13 +440,14 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
 
   async toHexForSave(): Promise<string> {
     //const fs = await this.initialize();
-    
-    let success = await compilerInstance.compile(await this.files());
-    let hex = await this.toHexString(await compilerInstance.getHex());
-    let ihex = await this.hex2ascii(hex);
-
-    if(success) return ihex;
-    else throw new HexGenerationError("Compilation failed");
+  
+    try {
+      let hex = await this.toHexString(await this.flashData());
+      let ihex = await this.hex2ascii(hex);
+      return ihex;
+    } catch (e: any) {
+      throw new HexGenerationError(e.message);
+    }
   }
 
   // Convert a byte array to hex
@@ -474,34 +472,32 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   }
 
   async fullFlashData(boardId: BoardId): Promise<Uint8Array> {
-    if (!this.langPython) {
-      console.log("full")
-      let success = await compilerInstance.compile(await this.files());
-
-      if(success) return await compilerInstance.getHex();
-      else throw new HexGenerationError("Compilation failed");
-    }
-
+    console.log("full")
     try {
-      const fs = await this.initialize();
-      return asciiToBytes(fs.getIntelHex(boardId.normalize().id));
+      return await this.flashData();
+      // const fs = await this.initialize();
+      // return asciiToBytes(fs.getIntelHex(boardId.normalize().id));
     } catch (e: any) {
       throw new HexGenerationError(e.message);
     }
   }
 
   async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
-    if (!this.langPython) {
-      console.log("partial")
-      let success = await compilerInstance.compile(await this.files());
-
-      if(success) return await compilerInstance.getHex();
-      else throw new HexGenerationError("Compilation failed");
-    }
-
+    console.log("partial")
     try {
-      const fs = await this.initialize();
-      return fs.getIntelHexBytes(boardId.normalize().id);
+      return await this.flashData();
+      // const fs = await this.initialize();
+      // return fs.getIntelHexBytes(boardId.normalize().id);
+    } catch (e: any) {
+      throw new HexGenerationError(e.message);
+    }
+  }
+
+  async flashData(): Promise<Uint8Array> {
+    try {
+      await compilerInstance.compile(await this.files());
+      const hex = await compilerInstance.getHex();
+      return hex;
     } catch (e: any) {
       throw new HexGenerationError(e.message);
     }
