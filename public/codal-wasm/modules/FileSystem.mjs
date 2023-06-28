@@ -56,11 +56,20 @@ export default class FileSystem extends EmProcess {
 
     async unpack(...paths) {
         return Promise.all(paths.flat().map(async (path) => {
-            postMessage("download")
+            postMessage({
+                type: "info",
+                body: "Downloading root",
+            })
+
+
             let file = await fetch(path);
             let buffer = new Uint8Array(await file.arrayBuffer());
 
-            postMessage("populate")
+            postMessage({
+                type: "info",
+                body: "Unpacking",
+            })
+
             if (path.endsWith(".br")) {
                 // it's a brotli file, decompress it
                 await this.FS.writeFile("/tmp/archive.pack.br", buffer);

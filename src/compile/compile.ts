@@ -22,49 +22,20 @@ export class CODALCompiler implements Compiler {
     private hex : Uint8Array = new Uint8Array();
 
     private handleWorkerMessage(e : MessageEvent<any>) {
-        if(this.errorComing){
-            console.log("[CODAL] error coming true");
-            // removeErrors();
-            // if (e.data.includes("error"))showError(e.data);
-            this.errorComing = false;
-            // this.compiling = false;
-            return;
-        }
-        if(this.completionComing){
-            console.log("[CODAL] completion coming true");
+        const msg = e.data;
 
-            // completionData = e.data.stdout;
-            // if(completionData!="" || completionData!=null) editor.showHint({hint: parseCompletion});
-            // checkHint();
-            // completionData = null;
-            this.completionComing = false;
-            return;
-        }    
-        switch (e.data){
-            case "fs":          console.log("[CODAL] FS creation");   break;
-            case "download":    console.log("[CODAL] Downloading");   break;    
-            case "populate":    console.log("[CODAL] Populating FS"); break;  
-            case "wasm":        console.log("[CODAL] Wasm Modules");  break;  
-            case "busy":        console.log("[CODAL] Downloading");   break;
-            case "headers":     console.log("[CODAL] Headers");       break;
-            case "ready":
-                console.log("[CODAL] Compile Ready"); 
-                break;
-            case "error":
-                this.errorComing = true;
-                break;
-            case "completions":
-                this.completionComing = true;
-                break;
-            default:
-                console.log("[CODAL] Compile Complete");
-                this.hex = e.data;
+        switch (msg.type) {
+            case "info":    console.log(`[CODAL] ${msg.body}`);     break;
+            case "error":   console.error(`[CODAL] Error: ${msg.body}`);   break;
+            case "stderr":  console.error(`[CODAL] ${msg.source} error\nstderr: ${msg.body}`);  break;
+            case "hex":
+                console.log("[CODAL] Compile complete.");
+                this.hex = msg.body;
                 this.compiling = false;
-                // removeErrors();
-                // if(document.getElementById("connect").disabled && daplink) hexCode = e.data;
-                // else download(hex2ascii(toHexString(e.data)),"MICROBIT.hex");   // Determine IF flash or just download here.
-                // console.timeEnd('Round-trip: ')
                 break;
+            case "output":
+                console.log(`[CODAL] ${msg.source} output:`); console.log(msg.body);  break;
+            default:        console.warn(`Unhandled message '${msg.type}' from CODAL worker.\nFull message:\n${msg}`);
         }
     }
 

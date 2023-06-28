@@ -4,6 +4,8 @@ import LlvmBoxProcess from "./modules/LlvmBoxProcess.mjs";
 import ClangdProcess from "./modules/ClangdProcess.mjs"
 
 class LLVM {
+    initialised = false;
+
     constructor(){
         this.init();
     }
@@ -12,7 +14,11 @@ class LLVM {
     tools = {};
 
     async init() {
-        postMessage("fs");
+        postMessage({
+            type: "info",
+            body: "Populating File System",
+        })
+
         const fileSystem = await new FileSystem();
         this.fileSystem = fileSystem;
 
@@ -24,7 +30,11 @@ class LLVM {
             FS: fileSystem.FS
         };
 
-        postMessage("wasm");
+        postMessage({
+            type: "info",
+            body: "Initialising Tools",
+        })
+
         const tools = {
             "llvm-box": new LlvmBoxProcess(processConfig),
             "clangd": new ClangdProcess(processConfig)
@@ -35,7 +45,11 @@ class LLVM {
             await tools[tool];
         };
 
-        postMessage("headers");
+        postMessage({
+            type: "info",
+            body: "Generating PCH",
+        })
+
         // Generate precompiled header files. Massively speeds up MicroBit.h include.
         await llvm.run('clang++', '-x', 'c++-header','-Xclang','-emit-pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
             '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
@@ -45,10 +59,14 @@ class LLVM {
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
             '-o','MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
-        let output = await llvm.run('clangd','--help');
-        console.log(output);
+        // let output = await llvm.run('clangd','--help');
 
-        postMessage("ready");
+        postMessage({
+            type: "info",
+            body: "Ready",
+        })
+
+        this.initialised = true;
     };
 
     onprocessstart = () => {};
@@ -117,7 +135,6 @@ const includeConst = ['-I/include','-I/include/arm-none-eabi-c++/c++/10.3.1',
 '-I/libraries/codal-microbit-nrf5sdk/nRF5SDK/components/ble/ble_services/ble_dis']
 
 async function compileCode(fileArray) {
-    console.time('Compile: ')
     //Compilation step using clang.wasm module. Mostly copied from microbit-v2-samples final compilation step with some extra flags to supress clang warnings.  
     let fileName;
     let filesToLink = [];
@@ -128,7 +145,6 @@ async function compileCode(fileArray) {
         fileName = fileArray[f];
         allFiles.push(fileName);
         if(fileName.includes(".cpp")){
-            console.log(fileName)
             let clangOutput = await llvm.run('clang++','-include-pch','MicroBit.h.pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
             '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
             '-fwrapv','-fno-rtti','-fno-threadsafe-statics','-fno-exceptions','-fno-unwind-tables','-Wno-array-bounds','-include', '/include/codal_extra_definitions.h',
@@ -136,18 +152,26 @@ async function compileCode(fileArray) {
             '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT',fileName+'.obj','-MF','DEPFILE',
             '-o',fileName+'.obj','-c', fileName);
-            console.log(clangOutput);
-            if(clangOutput.stderr !== ""){ 
-                postMessage("error");
-                postMessage(clangOutput.stderr);
+
+            postMessage({
+                type: "output",
+                source: "clang",
+                body: clangOutput,
+            })
+
+            if(clangOutput.stderr !== ""){
+                postMessage({
+                    type: "stderr",
+                    source: "clang",
+                    body: clangOutput.stderr,
+                });
+
                 clangerr = true;
             }
             filesToLink.push(fileName+".obj");
         }
     }
-    console.timeEnd('Compile: ')
-
-    console.time('Link: ');
+  
     //Linking to create MICROBIT executable using lld.wasm module. Copied from microbit-v2-samples final linking step. 
     let linkOutput = await llvm.run('ld.lld','-plugin','/libraries/arm-none-eabi/liblto_plugin.so','-plugin-opt=/libraries/arm-none-eabi/lto-wrapper', '-plugin-opt=-fresolution=/tmp/ccJn9KUK.res',
     '-plugin-opt=-pass-through=-lgcc','-plugin-opt=-pass-through=-lc_nano','-plugin-opt=-pass-through=-lgcc','-plugin-opt=-pass-through=-lc_nano',
@@ -162,18 +186,29 @@ async function compileCode(fileArray) {
     '-lm','-lc_nano','-lgcc','--end-group','-lstdc++_nano','-lm','-lc_nano','--start-group','-lgcc','-lc_nano','--end-group',
     '--start-group','-lgcc','-lc_nano','--end-group','/libraries/arm-none-eabi/thumb/v7e-m+fp/softfp/crtend.o','/libraries/arm-none-eabi/thumb/v7e-m+fp/softfp/crtn.o',
     '-T','/libraries/codal-microbit-v2/ld/nrf52833-softdevice.ld');
-    console.log(linkOutput);
+
+    postMessage({
+        type: "output",
+        source: "linker",
+        body: linkOutput,
+    })
+
     if(linkOutput.stderr !== "" && clangerr === false){ 
-        postMessage("error");
-        postMessage(linkOutput.stderr);
+        postMessage({
+            type: "stderr",
+            source: "linker",
+            body: linkOutput.stderr,
+        });
     }
-    console.timeEnd('Link: ');
-    
-    console.time('Objcopy: ')
+
     //Converting MICROBIT executable to hex file. Using llvm-objcopy.wasm module.
     let objOutput = await llvm.run('llvm-objcopy', '-O', 'ihex', 'MICROBIT', 'MICROBIT.hex');
-    console.timeEnd('Objcopy: ')
-    console.log(objOutput);
+ 
+    postMessage({
+        type: "output",
+        source: "objcopy",
+        body: objOutput,
+    })
 
     let output = await llvm.getHex();
 
@@ -214,7 +249,6 @@ Do not include global declarations in code-completion results.
 Do not include declarations inside namespaces (incl. global namespace) in the code-completion results.
 */
 async function clangCompletion(args){
-    console.time('Completion: ');
 
     let lineInfo = args[1]+":"+args[3]+":"+args[4];
     let info = await llvm.run('clang','-include-pch','MicroBit.h.pch',"-fsyntax-only",'-Xclang','-code-completion-brief-comments','-Xclang',"-code-completion-at="+lineInfo, args[1],'--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
@@ -223,7 +257,6 @@ async function clangCompletion(args){
             '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
             '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC','-D__START=target_start');
-    console.timeEnd('Completion: ');
 
     // Delete added files
     args[2].forEach(async (_, index) => {
@@ -234,19 +267,35 @@ async function clangCompletion(args){
 }
 
 onmessage = async(e) => {
-    console.log('Worker is compiling');
-    postMessage("busy");
+    if (!llvm.initialised) {
+        postMessage({
+            type: "error",
+            body: "Worker is not yet initialised"
+        })
+        return;
+    }
+
+    postMessage({
+        type: "info",
+        body: "Worker busy",
+    });
 
     if(e.data[0] == "completion"){
         llvm.saveFiles(e.data[2]);
-        postMessage("completions")
-        postMessage(await clangCompletion(e.data));
+
+        postMessage({
+            type: "completion",
+            body: await clangCompletion(e.data),
+        });
     }
     else{
         llvm.saveFiles(e.data);
-        postMessage(await compileCode(Object.keys(e.data)));
+        
+        postMessage({
+            type: "hex",
+            body: await compileCode(Object.keys(e.data)),
+        });
     }
-    postMessage("ready");
 }
 
 const llvm = new LLVM();

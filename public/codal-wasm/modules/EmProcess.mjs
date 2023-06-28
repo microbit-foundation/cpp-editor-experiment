@@ -73,7 +73,6 @@ export default class EmProcess extends Process {
             printErr: (...args) => this._printErr(...args),
         });
         
-        console.log(Module);
         this._memory = this._module.HEAPU8.slice();
 
         if (fsroot) {
