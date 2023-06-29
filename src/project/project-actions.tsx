@@ -674,20 +674,18 @@ export class ProjectActions {
       />
     ));
 
-    
-
     if (filenameWithExtension) {
+      const cppTemplate = "// Your new file!";
+      const headerName = filenameWithExtension?.toUpperCase().replaceAll('.', '_');
+      const headerTemplate = `#ifndef ${headerName}\n#define ${headerName}\n\n// Your new header file!\n\n#endif`;
+
       this.logging.event({
         type: "create-file",
       });
       try {
-        // const filename = ensurePythonExtension(filenameWithoutExtension);
-        // const filename = ensureCppExtension(filenameWithoutExtension);
-        
         await this.fs.write(
           filenameWithExtension,
-          // "# Your new file!",
-          "// Your new file!",
+          filenameWithExtension.endsWith('.h') ? headerTemplate : cppTemplate, //could be a better way of checking file type?
           VersionAction.INCREMENT
         );
         this.setSelection({ file: filenameWithExtension, location: { line: undefined } });

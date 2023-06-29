@@ -483,7 +483,6 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
   }
 
   async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
-    console.log("partial")
     try {
       return await this.flashData();
       // const fs = await this.initialize();

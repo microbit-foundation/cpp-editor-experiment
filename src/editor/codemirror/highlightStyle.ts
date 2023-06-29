@@ -63,8 +63,8 @@ export const highlightStyle = () => {
     
     { tag: tags.typeName, color: "teal"},
     
-    { tag: tags.function(tags.propertyName), color: "orange"},
-    { tag: tags.function(tags.variableName), color: "orange" },
+    { tag: tags.function(tags.propertyName), color: "#d68006"},
+    { tag: tags.function(tags.variableName), color: "#d68006" },
 
     
     { tag: tags.name, color: dark },
