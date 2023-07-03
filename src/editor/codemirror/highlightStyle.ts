@@ -52,7 +52,7 @@ export const highlightStyle = () => {
     { tag: tags.string, color: "var(--chakra-colors-code-string)" },
     { tag: tags.keyword, color: "var(--chakra-colors-code-keyword)" },
 
-    { tag: tags.escape, color: "darkblue"},
+    { tag: tags.escape, color: "#5cab32"},
 
     { tag: tags.processingInstruction, color: "purple"},
 
