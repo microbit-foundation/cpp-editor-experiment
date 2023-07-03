@@ -37,7 +37,10 @@ class LLVM {
 
         const tools = {
             "llvm-box": new LlvmBoxProcess(processConfig),
-            "clangd": new ClangdProcess(processConfig)
+            "clangd": new ClangdProcess({
+                ...processConfig,
+                noFSInit: true,
+            })
         };
         this.tools = tools;
 
@@ -60,7 +63,6 @@ class LLVM {
             '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
         const clangdModule = tools['clangd']._module;
-        // const stdin = clangdModule.stdin
 
         const initMessage = {
             jsonrpc: "2.0",
