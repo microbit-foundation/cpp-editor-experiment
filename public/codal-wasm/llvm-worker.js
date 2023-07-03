@@ -59,7 +59,55 @@ class LLVM {
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
             '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
-        // let output = await llvm.run('clangd','--help');
+        const clangdModule = tools['clangd']._module;
+        // const stdin = clangdModule.stdin
+
+        const initMessage = {
+            jsonrpc: "2.0",
+	        id: 1,
+            method: 'initialize',
+            params: {
+                processId: 42,
+                rootUri: 'file:///src/',
+                clientCapabilities: null,
+            }
+        }
+
+        const initString = JSON.stringify(initMessage);
+        console.log(`Content-Length: ${initString.length}\r\n\r\n${initString}`)
+        let stdinBuffer = `Content-Length: ${initString.length}\r\n\r\n${initString}`;
+        let i=-1;
+        function stdinFn() {
+            i++;
+            const c = i < stdinBuffer.length ? stdinBuffer.charCodeAt(i) : null;
+            console.log(String.fromCharCode(c));
+            return c;
+        }
+
+        var stdoutBuffer = "";
+        function stdoutFn(code) {
+            if (code === "\n".charCodeAt(0) && stdoutBuffer !== "") {
+                console.log(stdoutBuffer);
+                stdoutBuffer = "";
+            } else stdoutBuffer += String.fromCharCode(code);
+        }
+
+        var stderrBuffer = "";
+        const stderrFn = (code) => { 
+            if (code === "\n".charCodeAt(0) && stderrBuffer !== "") {
+                if (stderrBuffer.startsWith("I")) console.log(stderrBuffer);
+                else if (stderrBuffer.startsWith("E")) console.error(stderrBuffer);
+            stderrBuffer = "";
+        } else stderrBuffer += String.fromCharCode(code); };
+
+        clangdModule.FS.init(stdinFn, stdoutFn, stderrFn);
+    
+
+        // clangdModule.stdin = FS.open("/dev/stdin", 0);
+        // clangdModule.stdout = FS.open("/dev/stdout", 1);
+        // clangdModule.stderr = FS.open("/dev/stderr", 1);
+
+        let output = await llvm.run('clangd', '--log=verbose');
 
         postMessage({
             type: "info",
