@@ -60,27 +60,23 @@ class LLVM {
             '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
             '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
-            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
-
+            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h'
+        );
         
-        const clangdModule = tools['clangd']._module;
+        //temporary test to try to get clangd to work
+        await this.clangdTest();
 
-        // Setup std streams
-        const stdin = new StdStream();
+        postMessage({
+            type: "info",
+            body: "Ready",
+        })
 
-        const stdout = new StdStream();
-        stdout.onStreamRead = (result) => {
-            console.log(result);
-        }
+        this.initialised = true;
+    };
 
-        const stderr = new StdStream();
-        stderr.onStreamRead = (result) => {
-            if (result.startsWith("E")) console.error(result);
-            else console.log(result);
-        }
-
-        clangdModule.FS.init(stdin.get, stdout.put, stderr.put);
-
+    async clangdTest() {
+        const clangdModule = this.tools['clangd']._module;
+        const clangd = new Clangd(clangdModule);
 
         // construct initialize message
         const lspUtil = new LSPUtil();
@@ -92,17 +88,10 @@ class LLVM {
         }
         const message = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper(method, params) );
 
-        stdin.write(message);
+        clangd.stdin.write(message);
 
         let output = await llvm.run('clangd', '--log=verbose');
-
-        postMessage({
-            type: "info",
-            body: "Ready",
-        })
-
-        this.initialised = true;
-    };
+    }
 
     onprocessstart = () => {};
     onprocessend = () => {};
@@ -309,43 +298,63 @@ onmessage = async(e) => {
         return;
     }
 
-    postMessage({
-        type: "info",
-        body: "Worker busy",
-    });
+    const msg = e.data;
 
-    if(e.data[0] == "completion"){
-        llvm.saveFiles(e.data[2]);
-
-        postMessage({
-            type: "completion",
-            body: await clangCompletion(e.data),
-        });
-    }
-    else{
-        llvm.saveFiles(e.data);
-        
-        let success = await compileCode(Object.keys(e.data))
-        
-        if (success) {
-            const hex = await llvm.getHex();
-            postMessage({
-                type: "hex",
-                body: hex,
-            });
-        } else {
+    switch (msg.type) {
+        case "compile": handleCompileRequest(msg.body); break;
+        case "clangd":  handleClangdRequest(msg.body);  break;
+        default: 
             postMessage({
                 type: "error",
-                body: "Compilation failed",
+                body: `Unhandled request message type '${msg.type}' received.\nFull message:\n${msg}`,
             })
-        }
-
-        postMessage({
-            type: "compile-complete",
-        })
-
-        await clean();
+            break;
+            
     }
+
+    //old syntax run code
+    // if(e.data[0] == "completion"){
+    //     llvm.saveFiles(e.data[2]);
+
+    //     postMessage({
+    //         type: "completion",
+    //         body: await clangCompletion(e.data),
+    //     });
+    // }
+    // else{
+        
+    // }
+}
+
+async function handleCompileRequest(files) {
+    llvm.saveFiles(files);
+        
+    let success = await compileCode(Object.keys(files))
+    
+    if (success) {
+        const hex = await llvm.getHex();
+        postMessage({
+            type: "hex",
+            body: hex,
+        });
+    } else {
+        postMessage({
+            type: "error",
+            body: "Compilation failed",
+        })
+    }
+
+    postMessage({
+        type: "compile-complete",
+    })
+
+    await clean();
+}
+
+async function handleClangdRequest(request) {
+    console.warn("Clangd request not yet implemented");
+
+
 }
 
 const llvm = new LLVM();
@@ -404,5 +413,39 @@ class StdStream {
         } else {
             this.buffer.push(String.fromCharCode(byte));
         }
+    }
+}
+
+class Clangd {
+    module;
+    stdin;
+    stdout;
+    stderr;
+
+    constructor (module) {
+        this.module = module;
+
+        this.initStreams();
+    }
+
+    initStreams() {
+        const stdin = new StdStream();
+
+        const stdout = new StdStream();
+        stdout.onStreamRead = (result) => {
+            console.log(result);
+        }
+
+        const stderr = new StdStream();
+        stderr.onStreamRead = (result) => {
+            if (result.startsWith("E")) console.error(result);
+            else console.log(result);
+        }
+
+        this.module.FS.init(stdin.get, stdout.put, stderr.put);
+
+        this.stdin = stdin;
+        this.stdout = stdout;
+        this.stderr = stderr;
     }
 }

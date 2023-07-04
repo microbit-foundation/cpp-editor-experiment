@@ -39,7 +39,6 @@ export class CODALCompiler implements Compiler {
                 this.compiling = false;
                 break;
             case "hex":
-                console.log("[CODAL] Compile complete.");
                 this.hex = msg.body;
                 break;
             case "output":
@@ -52,15 +51,18 @@ export class CODALCompiler implements Compiler {
         this.compiling = true;
         this.errorFlag = false; //clear error flag before compile
 
-        this.llvmWorker.postMessage(files);
+        this.llvmWorker.postMessage({
+            type: "compile",
+            body: files,
+        });
 
-        //Shouldn't do this :/
+        //Shouldn't do this incase compiler gets stuck :/
         while(this.compiling) {
             await new Promise<void>(resolve => {
                 setTimeout(() => {resolve();}, 1);
             })
         }
-        
+
         if (this.errorFlag) {
             throw new Error(this.stderr);
         }
