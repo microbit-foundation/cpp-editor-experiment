@@ -62,52 +62,37 @@ class LLVM {
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
             '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
 
+        
         const clangdModule = tools['clangd']._module;
 
-        const initMessage = {
-            jsonrpc: "2.0",
-	        id: 1,
-            method: 'initialize',
-            params: {
-                processId: 42,
-                rootUri: 'file:///src/',
-                clientCapabilities: null,
-            }
+        // Setup std streams
+        const stdin = new StdStream();
+
+        const stdout = new StdStream();
+        stdout.onStreamRead = (result) => {
+            console.log(result);
         }
 
-        const initString = JSON.stringify(initMessage);
-        console.log(`Content-Length: ${initString.length}\r\n\r\n${initString}`)
-        let stdinBuffer = `Content-Length: ${initString.length}\r\n\r\n${initString}`;
-        let i=-1;
-        function stdinFn() {
-            i++;
-            const c = i < stdinBuffer.length ? stdinBuffer.charCodeAt(i) : null;
-            console.log(String.fromCharCode(c));
-            return c;
+        const stderr = new StdStream();
+        stderr.onStreamRead = (result) => {
+            if (result.startsWith("E")) console.error(result);
+            else console.log(result);
         }
 
-        var stdoutBuffer = "";
-        function stdoutFn(code) {
-            if (code === "\n".charCodeAt(0) && stdoutBuffer !== "") {
-                console.log(stdoutBuffer);
-                stdoutBuffer = "";
-            } else stdoutBuffer += String.fromCharCode(code);
+        clangdModule.FS.init(stdin.get, stdout.put, stderr.put);
+
+
+        // construct initialize message
+        const lspUtil = new LSPUtil();
+        const method =  'initialize'
+        const params = {
+            processId: 42,
+            rootUri: 'file:///src/',
+            clientCapabilities: null,
         }
+        const message = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper(method, params) );
 
-        var stderrBuffer = "";
-        const stderrFn = (code) => { 
-            if (code === "\n".charCodeAt(0) && stderrBuffer !== "") {
-                if (stderrBuffer.startsWith("I")) console.log(stderrBuffer);
-                else if (stderrBuffer.startsWith("E")) console.error(stderrBuffer);
-            stderrBuffer = "";
-        } else stderrBuffer += String.fromCharCode(code); };
-
-        clangdModule.FS.init(stdinFn, stdoutFn, stderrFn);
-    
-
-        // clangdModule.stdin = FS.open("/dev/stdin", 0);
-        // clangdModule.stdout = FS.open("/dev/stdout", 1);
-        // clangdModule.stderr = FS.open("/dev/stderr", 1);
+        stdin.write(message);
 
         let output = await llvm.run('clangd', '--log=verbose');
 
@@ -271,21 +256,6 @@ function isError(stderr) {
 }
 
 async function clean() {
-    //Remove files for next compile
-    // await Promise.all([
-    //     // Delete added files
-    //     allFiles.forEach(element => {
-    //         llvm.fileSystem.unlink('/working/'+element);
-    //     }),
-    //     // Delete compiled files
-    //     filesToLink.forEach(element => {
-    //         llvm.fileSystem.unlink('/working/'+element);
-    //     }),
-    //     // Delete executable
-    //     llvm.fileSystem.unlink('/working/MICROBIT'),
-    //     llvm.fileSystem.unlink('/working/MICROBIT.hex')
-    // ]).catch(e, () => {console.error("Clean failed")});
-
     let workingDir = await llvm.fileSystem.FS.analyzePath('/working/');
     let filesToRemove = workingDir.object.contents;
 
@@ -379,3 +349,60 @@ onmessage = async(e) => {
 }
 
 const llvm = new LLVM();
+
+
+class LSPUtil {
+
+    HTTPWrapper = (json) => {
+        return `Content-Length: ${json.length}\r\n\r\n${json}`;
+    }
+
+    LSPCallWrapper = (method, params = {}) => {
+        const json = {
+            jsonrpc: "2.0",
+            id: 1,
+            method: method,
+            params: params,
+        }
+
+        return JSON.stringify(json);
+    }
+
+    LSPNotifyWrapper = (method, params = {}) => {
+        const json = {
+            jsonrpc: "2.0",
+            method: method,
+            params: params,
+        }
+
+        return JSON.stringify(json);
+    }
+}
+
+class StdStream {
+    buffer = [];
+
+    onStreamRead = (result) => {
+        console.warn(`[Default Handler] ${result}`)
+    }
+
+    write(data) {
+        for (let i=0; i<data.length; i++){
+            this.buffer.push(data[i]);
+        }
+    }
+
+    get = () => {
+        const c = this.buffer.shift().charCodeAt(0) | null;
+        return c;
+    }
+    
+    put = (byte) => {
+        if (byte === "\n".charCodeAt(0)) {
+            this.onStreamRead(this.buffer.join(''));
+            this.buffer = [];
+        } else {
+            this.buffer.push(String.fromCharCode(byte));
+        }
+    }
+}
