@@ -83,7 +83,7 @@ class LLVM {
         const method =  'initialize'
         const params = {
             processId: 42,
-            rootUri: 'file:///src/',
+            rootUri: 'file:///working/',
             clientCapabilities: null,
         }
         const message = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper(method, params) );
@@ -391,14 +391,20 @@ class LSPUtil {
 class StdStream {
     buffer = [];
 
-    onStreamRead = (result) => {
-        console.warn(`[Default Handler] ${result}`)
+    onPut = (char) => {
+        console.log(char)
     }
 
     write(data) {
         for (let i=0; i<data.length; i++){
             this.buffer.push(data[i]);
         }
+    }
+
+    read() {
+        const bufStr = this.buffer.join('');
+        this.clear()
+        return bufStr;
     }
 
     get = () => {
@@ -408,12 +414,13 @@ class StdStream {
     }
     
     put = (byte) => {
-        if (byte === "\n".charCodeAt(0)) {
-            this.onStreamRead(this.buffer.join(''));
-            this.buffer = [];
-        } else {
-            this.buffer.push(String.fromCharCode(byte));
-        }
+        const char = String.fromCharCode(byte);
+        this.buffer.push(char);
+        this.onPut(char);
+    }
+
+    clear() {
+        this.buffer = [];
     }
 }
 
@@ -433,14 +440,14 @@ class Clangd {
         const stdin = new StdStream();
 
         const stdout = new StdStream();
-        stdout.onStreamRead = (result) => {
-            console.log(result);
-        }
-
+        
         const stderr = new StdStream();
-        stderr.onStreamRead = (result) => {
-            if (result.startsWith("E")) console.error(result);
-            else console.log(result);
+        stderr.onPut = (char) => {
+            if (char === "\n") {
+                const line = stderr.read();
+                if (line.startsWith("E")) console.error(line);
+                else console.log(line);
+            }
         }
 
         this.module.FS.init(stdin.get, stdout.put, stderr.put);
