@@ -12,6 +12,12 @@ const external = `node_modules/${theme}`;
 const internal = "src/deployment/default";
 
 module.exports = {
+  devServer: {
+    headers: { 
+      "Cross-Origin-Embedder-Policy": "require-corp",
+      "Cross-Origin-Opener-Policy": "same-origin" 
+    }
+  },
   webpack: {
     alias: {
       "theme-package": fs.existsSync(external)
