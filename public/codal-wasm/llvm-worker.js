@@ -402,7 +402,8 @@ class StdStream {
     }
 
     get = () => {
-        const c = this.buffer.shift().charCodeAt(0) | null;
+        if (this.buffer.length == 0) return null
+        const c = this.buffer.shift().charCodeAt(0);
         return c;
     }
     
