@@ -20,6 +20,7 @@ const workerScriptName = "pyright-main-99cf7dc02c2324815d13.worker.js";
  * These have the same lifetime as the app.
  */
 export const pyright = (language: string): LanguageServerClient | undefined => {
+  return undefined;
   // For jest.
   if (!window.Worker) {
     return undefined;
