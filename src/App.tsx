@@ -31,6 +31,10 @@ import BeforeUnloadDirtyCheck from "./workbench/BeforeUnloadDirtyCheck";
 import { SelectionProvider } from "./workbench/use-selection";
 import Workbench from "./workbench/Workbench";
 
+//
+import { clang } from "./compile/clang";
+const _clang = clang();
+
 const isMockDeviceMode = () =>
   // We use a cookie set from the e2e tests. Avoids having separate test and live builds.
   Boolean(
