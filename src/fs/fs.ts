@@ -19,8 +19,7 @@ import { asciiToBytes, extractModuleData, generateId } from "./fs-util";
 import { Host } from "./host";
 import { PythonProject } from "./initial-project";
 import { FSStorage } from "./storage";
-
-import { compilerInstance } from "../compile/compile";
+import { clang } from "../compile/clang";
 
 const commonFsSize = 20 * 1024;
 
@@ -494,8 +493,9 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
 
   async flashData(): Promise<Uint8Array> {
     try {
-      await compilerInstance.compile(await this.files());
-      const hex = await compilerInstance.getHex();
+      const _clang = clang();
+      await _clang.compiler.compile(await this.files());
+      const hex = await _clang.compiler.getHex();
       return hex;
     } catch (e: any) {
       throw new HexGenerationError(e.message);

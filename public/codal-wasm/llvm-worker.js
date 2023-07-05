@@ -15,6 +15,7 @@ class LLVM {
 
     async init() {
         postMessage({
+            target: "worker",
             type: "info",
             body: "Populating File System",
         })
@@ -31,6 +32,7 @@ class LLVM {
         };
 
         postMessage({
+            target: "worker",
             type: "info",
             body: "Initialising Tools",
         })
@@ -49,6 +51,7 @@ class LLVM {
         };
 
         postMessage({
+            target: "compile",
             type: "info",
             body: "Generating PCH",
         })
@@ -64,9 +67,9 @@ class LLVM {
         );
         
         //temporary test to try to get clangd to work
-        await this.clangdTest();
 
         postMessage({
+            target: "worker",
             type: "info",
             body: "Ready",
         })
@@ -87,8 +90,18 @@ class LLVM {
             clientCapabilities: null,
         }
         const message = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper(method, params) );
-
         clangd.stdin.write(message);
+
+        const message2 = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper('textDocument/completion', {
+            "textDocument": {
+                "uri": "file:///working/main.cpp"
+              },
+              "position": {
+                "line": 4,
+                "character": 10
+              }
+        }) );
+        clangd.stdin.write(message2);
 
         llvm.run('clangd'); // '--log=verbose'
     }
@@ -178,6 +191,7 @@ async function compileCode(fileArray) {
             '-o',fileName+'.obj','-c', fileName);
 
             postMessage({
+                target: "compile",
                 type: "output",
                 source: "clang",
                 body: clangOutput,
@@ -185,6 +199,7 @@ async function compileCode(fileArray) {
 
             if(isError(clangOutput.stderr)){
                 postMessage({
+                    target: "compile",
                     type: "stderr",
                     source: "clang",
                     body: clangOutput.stderr,
@@ -212,6 +227,7 @@ async function compileCode(fileArray) {
     '-T','/libraries/codal-microbit-v2/ld/nrf52833-softdevice.ld');
 
     postMessage({
+        target: "compile",
         type: "output",
         source: "linker",
         body: linkOutput,
@@ -219,6 +235,7 @@ async function compileCode(fileArray) {
 
     if (isError(linkOutput.stderr)) { 
         postMessage({
+            target: "compile",
             type: "stderr",
             source: "linker",
             body: linkOutput.stderr,
@@ -231,6 +248,7 @@ async function compileCode(fileArray) {
     let objOutput = await llvm.run('llvm-objcopy', '-O', 'ihex', 'MICROBIT', 'MICROBIT.hex');
  
     postMessage({
+        target: "compile",
         type: "output",
         source: "objcopy",
         body: objOutput,
@@ -245,6 +263,9 @@ function isError(stderr) {
 }
 
 async function clean() {
+    await llvm.clangdTest();
+
+
     let workingDir = await llvm.fileSystem.FS.analyzePath('/working/');
     let filesToRemove = workingDir.object.contents;
 
@@ -292,6 +313,7 @@ async function clangCompletion(args){
 onmessage = async(e) => {
     if (!llvm.initialised) {
         postMessage({
+            target: "worker",
             type: "error",
             body: "Worker is not yet initialised"
         })
@@ -305,6 +327,7 @@ onmessage = async(e) => {
         case "clangd":  handleClangdRequest(msg.body);  break;
         default: 
             postMessage({
+                target: "worker",
                 type: "error",
                 body: `Unhandled request message type '${msg.type}' received.\nFull message:\n${msg}`,
             })
@@ -334,17 +357,20 @@ async function handleCompileRequest(files) {
     if (success) {
         const hex = await llvm.getHex();
         postMessage({
+            target: "compile",
             type: "hex",
             body: hex,
         });
     } else {
         postMessage({
+            target: "compile",
             type: "error",
             body: "Compilation failed",
         })
     }
 
     postMessage({
+        target: "compile",
         type: "compile-complete",
     })
 
@@ -481,8 +507,13 @@ class Clangd {
                 this.contentReady = false;
                 const content = this.stdout.read();
                 const response = JSON.parse(content);
+                
+                postMessage({
+                    target: "clangd",
+                    type: "response",
+                    body: response
+                })
             }
-
             return;
         }
 
@@ -491,12 +522,12 @@ class Clangd {
         this.outBuffer.push(char);
 
         if(this.outBuffer.join('') === this._fullTerminator) {
-            console.log("[CLANGD] All headers received. Reading content");
+            // console.log("All headers received. Reading content");
 
             this.stdout.clear()  //there shouldn't be any useful data left in the buffer
 
             //Prepare to read content
-            if (!this.responseHeaders["Content-Length"]) console.error("[CLANGD] Expected header 'Content-Length' was not found! Cannot continue reading LSP response");
+            if (!this.responseHeaders["Content-Length"]) console.error("Expected header 'Content-Length' was not found! Cannot continue reading LSP response");
             else {
                 this.contentReady = true;
                 this.contentRemaining = this.responseHeaders["Content-Length"];
@@ -507,7 +538,7 @@ class Clangd {
             this.stdout.buffer.pop();
 
             const header = this.stdout.read();
-            console.log(`[CLANGD] Received Header: '${header}'`);5
+            // console.log(`Received Header: '${header}'`);
             
             const kvp = header.split(this._separator_);
             this.responseHeaders[kvp[0]] = kvp[1];

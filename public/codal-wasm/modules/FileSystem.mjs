@@ -57,6 +57,7 @@ export default class FileSystem extends EmProcess {
     async unpack(...paths) {
         return Promise.all(paths.flat().map(async (path) => {
             postMessage({
+                target: "worker",
                 type: "info",
                 body: "Downloading root",
             })
@@ -66,6 +67,7 @@ export default class FileSystem extends EmProcess {
             let buffer = new Uint8Array(await file.arrayBuffer());
 
             postMessage({
+                target: "worker",
                 type: "info",
                 body: "Unpacking",
             })

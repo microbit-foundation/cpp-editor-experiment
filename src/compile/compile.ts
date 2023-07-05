@@ -6,23 +6,19 @@ export interface Compiler {
 }
 
 export class CODALCompiler implements Compiler {
-    private llvmWorker : Worker;
-
-    constructor() {
-        this.llvmWorker = new Worker(`${baseUrl}codal-wasm/llvm-worker.js`, {type:"module"})
-        this.llvmWorker.onmessage = (e => this.handleWorkerMessage(e));
-    }
-
     private errorFlag = false;
-
     private compiling : boolean = false;
 
     private hex : Uint8Array = new Uint8Array();
     private stderr : string = "";
 
-    private handleWorkerMessage(e : MessageEvent<any>) {
-        const msg = e.data;
+    private worker : Worker;
 
+    constructor (worker : Worker) {
+        this.worker = worker;
+    }
+
+    public handleWorkerMessage(msg : any) {
         switch (msg.type) {
             case "info":    console.log(`[CODAL] ${msg.body}`);     break;
             case "error":   
@@ -51,7 +47,7 @@ export class CODALCompiler implements Compiler {
         this.compiling = true;
         this.errorFlag = false; //clear error flag before compile
 
-        this.llvmWorker.postMessage({
+        this.worker.postMessage({
             type: "compile",
             body: files,
         });
@@ -73,4 +69,4 @@ export class CODALCompiler implements Compiler {
     }
 }
 
-export const compilerInstance : Compiler = new CODALCompiler();
+// export const compilerInstance : Compiler = new CODALCompiler();
