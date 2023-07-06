@@ -8,9 +8,7 @@ export class StdStream {
     }
 
     write(data) {
-        for (let i=0; i<data.length; i++){
-            this.buffer.push(data[i]);
-        }
+        this.buffer = this.buffer.concat([...data]);
     }
 
     read() {
