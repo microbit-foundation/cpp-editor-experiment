@@ -78,6 +78,7 @@ class LLVM {
 
         const clangdModule = this.tools['clangd']._module;
         this.clangd = new Clangd(clangdModule);
+        llvm.run('clangd');
 
         postMessage({
             target: "worker",
@@ -86,6 +87,7 @@ class LLVM {
         })
 
         this.initialised = true;
+        onInit();
     };
 
     onprocessstart = () => {};
@@ -290,6 +292,12 @@ async function clangCompletion(args){
 }
 
 onmessage = async(e) => {
+    const msg = e.data;
+    if(msg.jsonrpc) {
+        handleClangdRequest(msg);
+        return;
+    }
+
     if (!llvm.initialised) {
         postMessage({
             target: "worker",
@@ -300,14 +308,7 @@ onmessage = async(e) => {
         console.warn(e.data);
         return;
     }
-
-    const msg = e.data;
-
-    if(msg.jsonrpc) {
-        handleClangdRequest(msg);
-        return;
-    }
-
+    
     switch (msg.type) {
         case "compile": handleCompileRequest(msg.body); break;
         default: 
@@ -362,14 +363,23 @@ async function handleCompileRequest(files) {
     await clean();
 }
 
-let messages = 10; 
 const lspUtil = new LSPUtil();
-async function handleClangdRequest(request) {
-    console.warn("Clangd request not yet implemented");
-    llvm.clangd.stdin.write(lspUtil.HTTPWrapper( JSON.stringify(request) ));
+let stdinQueue = ""
 
-    if (messages == 0) llvm.run('clangd');
-    messages--;
+function onInit() {
+    llvm.clangd.stdin.write(stdinQueue);
+}
+
+async function handleClangdRequest(request) {
+    const message = lspUtil.HTTPWrapper( JSON.stringify(request) );
+
+    //ideally no messages should be sent until the worker has finished initialising
+    if (!llvm.initialised) {
+        stdinQueue += message;
+        return;
+    }
+
+    llvm.clangd.stdin.write(message);
 }
 
 const llvm = new LLVM();
