@@ -4,7 +4,7 @@ import LlvmBoxProcess from "./modules/LlvmBoxProcess.mjs";
 import ClangdProcess from "./modules/ClangdProcess.mjs";
 
 import { LSPUtil } from "./lsp.mjs";
-import { Clangd } from "./clangd-server.mjs";
+import { ClangdStdio } from "./clangd-stdio.mjs";
 
 class LLVM {
     initialised = false;
@@ -15,7 +15,7 @@ class LLVM {
 
     fileSystem = null;
     tools = {};
-    clangd;
+    clangdStdio;
 
     async init() {
         postMessage({
@@ -77,7 +77,7 @@ class LLVM {
         })
 
         const clangdModule = this.tools['clangd']._module;
-        this.clangd = new Clangd(clangdModule);
+        this.clangdStdio = new ClangdStdio(clangdModule);
         llvm.run('clangd');
 
         postMessage({
@@ -367,7 +367,7 @@ const lspUtil = new LSPUtil();
 let stdinQueue = ""
 
 function onInit() {
-    llvm.clangd.stdin.write(stdinQueue);
+    llvm.clangdStdio.stdin.write(stdinQueue);
 }
 
 async function handleClangdRequest(request) {
@@ -379,7 +379,7 @@ async function handleClangdRequest(request) {
         return;
     }
 
-    llvm.clangd.stdin.write(message);
+    llvm.clangdStdio.stdin.write(message);
 }
 
 const llvm = new LLVM();

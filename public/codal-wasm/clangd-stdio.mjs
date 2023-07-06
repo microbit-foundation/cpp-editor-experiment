@@ -1,6 +1,6 @@
 import { StdStream } from "./stdstream.mjs";
 
-export class Clangd {
+export class ClangdStdio {
     module;
     stdin;
     stdout;
