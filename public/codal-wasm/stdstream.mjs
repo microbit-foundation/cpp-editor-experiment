@@ -1,3 +1,5 @@
+// End of file constant.
+const ETX = 3;
 export class StdStream {
     buffer = [];
 
@@ -17,8 +19,8 @@ export class StdStream {
         return bufStr;
     }
 
-    get = () => {
-        if (this.buffer.length == 0) return null
+    get = async () => {
+        while (this.buffer.length === 0) await new Promise(resolve => setTimeout(resolve, 4));
         const c = this.buffer.shift().charCodeAt(0);
         return c;
     }
@@ -34,6 +36,6 @@ export class StdStream {
     }
 
     close() {
-        //
+        this.buffer = ['\0'];
     }
 }
