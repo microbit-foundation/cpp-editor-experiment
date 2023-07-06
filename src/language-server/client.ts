@@ -5,6 +5,7 @@
  */
 import EventEmitter from "events";
 import {
+  ClientCapabilities,
   CompletionList,
   CompletionParams,
   CompletionRequest,
@@ -33,7 +34,7 @@ import { microPythonConfig } from "../micropython/micropython";
 /**
  * Create a URI for a source document under the default root of file:///src/.
  */
-export const createUri = (name: string) => `file:///src/${name}`;
+export const createUri = (name: string) => `file:///working/${name}`;
 
 /**
  * Owns the connection.
@@ -149,7 +150,7 @@ export class LanguageServerClient extends EventEmitter {
             configuration: true,
           },
         },
-        initializationOptions: await this.getInitializationOptions(),
+        //initializationOptions: await this.getInitializationOptions(),
         processId: null,
         // Do we need both of these?
         rootUri: this.rootUri,
@@ -160,6 +161,7 @@ export class LanguageServerClient extends EventEmitter {
           },
         ],
       };
+
       const { capabilities } = await this.connection.sendRequest(
         InitializeRequest.type,
         initializeParams
