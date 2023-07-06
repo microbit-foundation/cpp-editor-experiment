@@ -15,6 +15,7 @@ class LLVM {
 
     fileSystem = null;
     tools = {};
+    clangd;
 
     async init() {
         postMessage({
@@ -72,48 +73,20 @@ class LLVM {
         postMessage({
             target: "worker",
             type: "info",
+            body: "Readying clangd",
+        })
+
+        const clangdModule = this.tools['clangd']._module;
+        this.clangd = new Clangd(clangdModule);
+
+        postMessage({
+            target: "worker",
+            type: "info",
             body: "Ready",
         })
 
         this.initialised = true;
     };
-
-    async clangdTest() {
-        const clangdModule = this.tools['clangd']._module;
-        const clangd = new Clangd(clangdModule);
-
-        // construct initialize message
-        const lspUtil = new LSPUtil();
-        const method =  'initialize'
-        const params = {
-            processId: 42,
-            rootUri: 'file:///working/',
-            clientCapabilities: null,
-        }
-        const message = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper(method, params) );
-        clangd.stdin.write(message);
-
-        const message2 = lspUtil.HTTPWrapper( lspUtil.LSPCallWrapper('textDocument/completion', {
-            "textDocument": {
-                "uri": "file:///working/main.cpp"
-              },
-              "position": {
-                "line": 4,
-                "character": 10
-              }
-        }) );
-
-        llvm.run('clangd'); // '--log=verbose'
-
-        // await new Promise(resolve => setTimeout(function() {
-        //     console.log('Delayed task completed');
-        //     resolve();
-        //   }, 100));
-
-        // clangd.stdin.write(message2);     
-
-        console.log("After clangd runs")
-    }
 
     onprocessstart = () => {};
     onprocessend = () => {};
@@ -323,14 +296,20 @@ onmessage = async(e) => {
             type: "error",
             body: "Worker is not yet initialised"
         })
+
+        console.warn(e.data);
         return;
     }
 
     const msg = e.data;
 
+    if(msg.jsonrpc) {
+        handleClangdRequest(msg);
+        return;
+    }
+
     switch (msg.type) {
         case "compile": handleCompileRequest(msg.body); break;
-        case "clangd":  handleClangdRequest(msg.body);  break;
         default: 
             postMessage({
                 target: "worker",
@@ -380,14 +359,17 @@ async function handleCompileRequest(files) {
         type: "compile-complete",
     })
 
-    await llvm.clangdTest();
     await clean();
 }
 
+let messages = 10; 
+const lspUtil = new LSPUtil();
 async function handleClangdRequest(request) {
     console.warn("Clangd request not yet implemented");
+    llvm.clangd.stdin.write(lspUtil.HTTPWrapper( JSON.stringify(request) ));
 
-
+    if (messages == 0) llvm.run('clangd');
+    messages--;
 }
 
 const llvm = new LLVM();

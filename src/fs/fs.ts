@@ -493,7 +493,7 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
 
   async flashData(): Promise<Uint8Array> {
     try {
-      const _clang = clang();
+      const _clang = clang('en');
       await _clang.compiler.compile(await this.files());
       const hex = await _clang.compiler.getHex();
       return hex;

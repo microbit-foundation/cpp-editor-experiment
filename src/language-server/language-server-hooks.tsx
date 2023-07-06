@@ -18,7 +18,8 @@ import {
   removeTrackFsChangesListener,
   trackFsChanges,
 } from "./client-fs";
-import { pyright } from "./pyright";
+// import { pyright } from "./pyright";
+import { clang } from "../compile/clang";
 
 const LanguageServerClientContext = createContext<
   LanguageServerClient | undefined
@@ -41,7 +42,8 @@ export const LanguageServerClientProvider = ({
     LanguageServerClient | undefined
   >(undefined);
   useEffect(() => {
-    const client = pyright(languageId);
+    // const client = pyright(languageId);
+    const client = clang(languageId).clangd.clangdClient();
     setClientState(client);
     let listener: FsChangesListener | undefined;
     client?.initialize().then(() => {
