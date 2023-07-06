@@ -17,8 +17,18 @@ export class StdStream {
         return bufStr;
     }
 
+    flag = false;
     get = async () => {
-        while (this.buffer.length === 0) await new Promise(resolve => setTimeout(resolve, 4));
+        if(this.flag) {
+            // Pause completely until something enters the stream.
+            while (this.buffer.length === 0) await new Promise(resolve => setTimeout(resolve, 4));
+            this.flag = false;
+        }
+        // If the buffer is empty, return ETX. This is handled later on.
+        if (this.buffer.length === 0) {
+            this.flag = true;
+            return ETX;
+        }
         const c = this.buffer.shift().charCodeAt(0);
         return c;
     }

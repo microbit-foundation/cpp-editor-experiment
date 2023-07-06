@@ -2814,7 +2814,7 @@ var Module = (() => {
               if (result === undefined && bytesRead === 0) {
                 throw new FS.ErrnoError(6);
               }
-              if (result === null || result === undefined) break;
+              if (result === null || result === undefined || result === 3) break; // Break on ETX
               bytesRead++;
               buffer[offset + i] = result;
             }
