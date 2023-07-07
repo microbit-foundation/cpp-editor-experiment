@@ -4558,7 +4558,7 @@ var Module = (() => {
       try {
         var stream = SYSCALLS.getStreamFromFD(fd);
         // Handle stdin in a non-blocking manner.
-        if(stream.path != "/dev/sdin"){ // This string comparison is broken TODO.
+        if(stream.path === "/dev/stdin"){
           return Asyncify.handleAsync(async () => {
             var num = await doReadvAsync(stream, iov, iovcnt);
             GROWABLE_HEAP_U32()[pnum >> 2] = num;
