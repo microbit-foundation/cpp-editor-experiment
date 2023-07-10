@@ -42,12 +42,19 @@ export const LanguageServerClientProvider = ({
     LanguageServerClient | undefined
   >(undefined);
   useEffect(() => {
-    // const client = pyright(languageId);
     const client = clang(languageId).clangd.clangdClient();
     setClientState(client);
     let listener: FsChangesListener | undefined;
     client?.initialize().then(() => {
       listener = trackFsChanges(client, fs);
+
+      client.didOpenTextDocument( {
+        textDocument: {
+          languageId: "c++",
+          text: "int main() { return 0; }",
+          uri: "file:///src/main.cpp",
+        },
+      });
     });
     return () => {
       if (listener) {

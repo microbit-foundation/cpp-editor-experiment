@@ -8,7 +8,6 @@ export class ClangdStdio {
 
     constructor (module) {
         this.module = module;
-
         this.initStreams();
     }
 
@@ -48,7 +47,6 @@ export class ClangdStdio {
 
     contentRemaining = 0;
 
-    
     stdoutOnPutHandler(char) {
         if (this.contentReady) {
             this.contentRemaining--;
@@ -57,12 +55,8 @@ export class ClangdStdio {
                 this.contentReady = false;
                 const content = this.stdout.read();
                 const response = JSON.parse(content);
-                
-                postMessage({
-                    target: "clangd",
-                    type: "response",
-                    body: response
-                })
+
+                postMessage(response);
             }
             return;
         }
@@ -72,8 +66,6 @@ export class ClangdStdio {
         this.outBuffer.push(char);
 
         if(this.outBuffer.join('') === this._fullTerminator) {
-            // console.log("All headers received. Reading content");
-
             this.stdout.clear()  //there shouldn't be any useful data left in the buffer
 
             //Prepare to read content

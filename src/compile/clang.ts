@@ -18,15 +18,15 @@ export const clang = (langauge : string) : Clang => {
     const compiler = new CODALCompiler(clangWorker);
     const clangd = new Clangd(clangWorker, langauge);
 
-    clangWorker.onmessage = (e => {
-        const msg = e.data;
-            switch (msg.target) {
-                case "compile":     compiler.handleWorkerMessage(msg);  break;
-                case "clangd":      clangd.handleWorkerMessage(msg); break;
-                case "worker":      handleWorkerMessage(msg);   break;
-                default:            console.warn(`Unknown message target '${msg.target}' from worker.\nFull message:`); console.warn(msg);
-            }
-    });
+    // clangWorker.onmessage = (e => {
+    //     const msg = e.data;
+    //         switch (msg.target) {
+    //             case "compile":     compiler.handleWorkerMessage(msg);  break;
+    //             case "clangd":      clangd.handleWorkerMessage(msg); break;
+    //             case "worker":      handleWorkerMessage(msg);   break;
+    //             default:            console.warn(`Unknown message target '${msg.target}' from worker.\nFull message:`); console.warn(msg);
+    //         }
+    // });
 
     clangObj = {
         worker: clangWorker,

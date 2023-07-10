@@ -1,4 +1,4 @@
-import { createMessageConnection } from "vscode-jsonrpc";
+import { createMessageConnection, Logger } from "vscode-jsonrpc";
 import {
   BrowserMessageReader,
   BrowserMessageWriter,
@@ -10,9 +10,18 @@ export class Clangd {
     private client : LanguageServerClient;
 
     constructor(worker : Worker, langauge: string) {
+
+        const logger : Logger = {
+            error: (message: string) => {console.error(message)},
+	        warn: (message: string) => {console.warn(message)},
+	        info: (message: string) => {console.log(message)},
+	        log: (message: string) => {console.log(message)},
+        };
+
         const connection = createMessageConnection(
             new BrowserMessageReader(worker),
-            new BrowserMessageWriter(worker)
+            new BrowserMessageWriter(worker),
+            logger,
         )
         connection.listen();
 

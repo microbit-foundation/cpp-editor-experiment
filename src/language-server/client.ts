@@ -34,7 +34,7 @@ import { microPythonConfig } from "../micropython/micropython";
 /**
  * Create a URI for a source document under the default root of file:///src/.
  */
-export const createUri = (name: string) => `file:///working/${name}`;
+export const createUri = (name: string) => `file:///src/${name}`;
 
 /**
  * Owns the connection.
@@ -161,7 +161,6 @@ export class LanguageServerClient extends EventEmitter {
           },
         ],
       };
-
       const { capabilities } = await this.connection.sendRequest(
         InitializeRequest.type,
         initializeParams
