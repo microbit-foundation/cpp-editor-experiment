@@ -293,23 +293,9 @@ async function clangCompletion(args){
 
 onmessage = async(e) => {
     const msg = e.data;
-    if(msg.jsonrpc) {
-        handleClangdRequest(msg);
-        return;
-    }
-
-    if (!llvm.initialised) {
-        postMessage({
-            target: "worker",
-            type: "error",
-            body: "Worker is not yet initialised"
-        })
-
-        console.warn(e.data);
-        return;
-    }
     
     switch (msg.type) {
+        case "clangd": handleClangdRequest(msg.body); break;
         case "compile": handleCompileRequest(msg.body); break;
         default: 
             postMessage({
@@ -320,22 +306,18 @@ onmessage = async(e) => {
             break;
             
     }
-
-    //old syntax run code
-    // if(e.data[0] == "completion"){
-    //     llvm.saveFiles(e.data[2]);
-
-    //     postMessage({
-    //         type: "completion",
-    //         body: await clangCompletion(e.data),
-    //     });
-    // }
-    // else{
-        
-    // }
 }
 
 async function handleCompileRequest(files) {
+    if (!llvm.initialised) {
+        postMessage({
+            target: "worker",
+            type: "error",
+            body: "Cannot compile yet, worker is not yet initialised"
+        })
+        return;
+    }
+
     llvm.saveFiles(files);
         
     let success = await compileCode(Object.keys(files))

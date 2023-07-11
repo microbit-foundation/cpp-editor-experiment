@@ -19,7 +19,7 @@ import {
   trackFsChanges,
 } from "./client-fs";
 // import { pyright } from "./pyright";
-import { clang } from "../compile/clang";
+import { clang } from "../clang/clang";
 
 const LanguageServerClientContext = createContext<
   LanguageServerClient | undefined

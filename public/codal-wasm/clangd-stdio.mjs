@@ -18,13 +18,14 @@ export class ClangdStdio {
         stdout.onPut = (char) => { this.stdoutOnPutHandler(char) };
         
         const stderr = new StdStream();
-        stderr.onPut = (char) => {
-            if (char === "\n") {
-                const line = stderr.read();
-                if (line.startsWith("E")) console.error(line);
-                else console.log(line);
-            }
-        }
+        // stderr.onPut = (char) => {
+        //     if (char === "\n") {
+        //         const line = stderr.read();
+        //         if (line.startsWith("E")) console.error(line);
+        //         else console.log(line);
+        //     }
+        // }
+        stderr.onPut = (char) => {}
 
         this.module.FS.init(stdin.get, stdout.put, stderr.put);
 
@@ -56,7 +57,10 @@ export class ClangdStdio {
                 const content = this.stdout.read();
                 const response = JSON.parse(content);
 
-                postMessage(response);
+                postMessage({
+                    target: "clangd",
+                    body: response,
+                });
             }
             return;
         }
@@ -80,7 +84,6 @@ export class ClangdStdio {
             this.stdout.buffer.pop();
 
             const header = this.stdout.read();
-            // console.log(`Received Header: '${header}'`);
             
             const kvp = header.split(this._separator_);
             this.responseHeaders[kvp[0]] = kvp[1];

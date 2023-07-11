@@ -19,7 +19,7 @@ import { asciiToBytes, extractModuleData, generateId } from "./fs-util";
 import { Host } from "./host";
 import { PythonProject } from "./initial-project";
 import { FSStorage } from "./storage";
-import { clang } from "../compile/clang";
+import { clang } from "../clang/clang";
 
 const commonFsSize = 20 * 1024;
 
