@@ -20,11 +20,10 @@ export const clang = (langauge : string) : Clang => {
 
     const originalOnMessage = clangWorker.onmessage;
     clangWorker.onmessage = (e => {
-        originalOnMessage?.call(clangWorker, e);
         const msg = e.data;
             switch (msg.target) {
                 case "compile":     compiler.handleWorkerMessage(msg);  break;
-                case "clangd":      break;  //ignore clangd messages as the lsp message connection handles this
+                case "clangd":      originalOnMessage?.call(clangWorker, e); break; //this is the handler created by the vscode-jsonrpc connection
                 case "worker":      handleWorkerMessage(msg);   break;
                 default:            console.warn(`Unknown message target '${msg.target}' from worker.\nFull message:`); console.warn(msg);
             }
