@@ -99,15 +99,15 @@ export const autocompletion = (
               .filter((x) => !x.additionalTextEdits)
               .map((item) => {
                 const completion: AugmentedCompletion = {
-                  // In practice we don't get textEdit fields back from Pyright so the label is used.
+                  // TODO: use textEdit field returned by clangd
                   label: item.label,
                   apply: (view, completion, from, to) => {
                     logging.event({ type: "autocomplete-accept" });
-                    const insert = item.label;
+                    const insert = item.insertText ? item.insertText : item.label;
                     const transactions: TransactionSpec[] = [
                       {
                         changes: { from, to, insert },
-                        selection: { anchor: from + insert.length },
+                        selection: { anchor: from + insert.length},
                       },
                     ];
                     if (
