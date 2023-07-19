@@ -5,6 +5,7 @@
  */
 import EventEmitter from "events";
 import {
+  ClientCapabilities,
   CompletionList,
   CompletionParams,
   CompletionRequest,
@@ -149,7 +150,7 @@ export class LanguageServerClient extends EventEmitter {
             configuration: true,
           },
         },
-        initializationOptions: await this.getInitializationOptions(),
+        //initializationOptions: await this.getInitializationOptions(),
         processId: null,
         // Do we need both of these?
         rootUri: this.rootUri,

@@ -1,7 +1,10 @@
 import FileSystem from "./modules/FileSystem.mjs";
 
 import LlvmBoxProcess from "./modules/LlvmBoxProcess.mjs";
-import ClangdProcess from "./modules/ClangdProcess.mjs"
+import ClangdProcess from "./modules/ClangdProcess.mjs";
+
+import { LSPUtil } from "./lsp.mjs";
+import { ClangdStdio } from "./clangd-stdio.mjs";
 
 class LLVM {
     initialised = false;
@@ -12,9 +15,11 @@ class LLVM {
 
     fileSystem = null;
     tools = {};
+    clangdStdio;
 
     async init() {
         postMessage({
+            target: "worker",
             type: "info",
             body: "Populating File System",
         })
@@ -31,13 +36,17 @@ class LLVM {
         };
 
         postMessage({
+            target: "worker",
             type: "info",
             body: "Initialising Tools",
         })
 
         const tools = {
             "llvm-box": new LlvmBoxProcess(processConfig),
-            "clangd": new ClangdProcess(processConfig)
+            "clangd": new ClangdProcess({
+                ...processConfig,
+                noFSInit: true,
+            })
         };
         this.tools = tools;
 
@@ -46,6 +55,7 @@ class LLVM {
         };
 
         postMessage({
+            target: "compile",
             type: "info",
             body: "Generating PCH",
         })
@@ -57,16 +67,27 @@ class LLVM {
             '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
             '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
             '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
-            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h');
+            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h'
+        );
+        
+        postMessage({
+            target: "worker",
+            type: "info",
+            body: "Readying clangd",
+        })
 
-        // let output = await llvm.run('clangd','--help');
+        const clangdModule = this.tools['clangd']._module;
+        this.clangdStdio = new ClangdStdio(clangdModule);
+        llvm.run('clangd');
 
         postMessage({
+            target: "worker",
             type: "info",
             body: "Ready",
         })
 
         this.initialised = true;
+        onInit();
     };
 
     onprocessstart = () => {};
@@ -154,6 +175,7 @@ async function compileCode(fileArray) {
             '-o',fileName+'.obj','-c', fileName);
 
             postMessage({
+                target: "compile",
                 type: "output",
                 source: "clang",
                 body: clangOutput,
@@ -161,6 +183,7 @@ async function compileCode(fileArray) {
 
             if(isError(clangOutput.stderr)){
                 postMessage({
+                    target: "compile",
                     type: "stderr",
                     source: "clang",
                     body: clangOutput.stderr,
@@ -188,6 +211,7 @@ async function compileCode(fileArray) {
     '-T','/libraries/codal-microbit-v2/ld/nrf52833-softdevice.ld');
 
     postMessage({
+        target: "compile",
         type: "output",
         source: "linker",
         body: linkOutput,
@@ -195,6 +219,7 @@ async function compileCode(fileArray) {
 
     if (isError(linkOutput.stderr)) { 
         postMessage({
+            target: "compile",
             type: "stderr",
             source: "linker",
             body: linkOutput.stderr,
@@ -207,6 +232,7 @@ async function compileCode(fileArray) {
     let objOutput = await llvm.run('llvm-objcopy', '-O', 'ihex', 'MICROBIT', 'MICROBIT.hex');
  
     postMessage({
+        target: "compile",
         type: "output",
         source: "objcopy",
         body: objOutput,
@@ -221,21 +247,6 @@ function isError(stderr) {
 }
 
 async function clean() {
-    //Remove files for next compile
-    // await Promise.all([
-    //     // Delete added files
-    //     allFiles.forEach(element => {
-    //         llvm.fileSystem.unlink('/working/'+element);
-    //     }),
-    //     // Delete compiled files
-    //     filesToLink.forEach(element => {
-    //         llvm.fileSystem.unlink('/working/'+element);
-    //     }),
-    //     // Delete executable
-    //     llvm.fileSystem.unlink('/working/MICROBIT'),
-    //     llvm.fileSystem.unlink('/working/MICROBIT.hex')
-    // ]).catch(e, () => {console.error("Clean failed")});
-
     let workingDir = await llvm.fileSystem.FS.analyzePath('/working/');
     let filesToRemove = workingDir.object.contents;
 
@@ -281,51 +292,76 @@ async function clangCompletion(args){
 }
 
 onmessage = async(e) => {
+    const msg = e.data;
+    
+    switch (msg.type) {
+        case "clangd": handleClangdRequest(msg.body); break;
+        case "compile": handleCompileRequest(msg.body); break;
+        default: 
+            postMessage({
+                target: "worker",
+                type: "error",
+                body: `Unhandled request message type '${msg.type}' received.\nFull message:\n${msg}`,
+            })
+            break;
+            
+    }
+}
+
+async function handleCompileRequest(files) {
     if (!llvm.initialised) {
         postMessage({
+            target: "worker",
             type: "error",
-            body: "Worker is not yet initialised"
+            body: "Cannot compile yet, worker is not yet initialised"
         })
         return;
     }
 
-    postMessage({
-        type: "info",
-        body: "Worker busy",
-    });
-
-    if(e.data[0] == "completion"){
-        llvm.saveFiles(e.data[2]);
-
+    llvm.saveFiles(files);
+        
+    let success = await compileCode(Object.keys(files))
+    
+    if (success) {
+        const hex = await llvm.getHex();
         postMessage({
-            type: "completion",
-            body: await clangCompletion(e.data),
+            target: "compile",
+            type: "hex",
+            body: hex,
         });
-    }
-    else{
-        llvm.saveFiles(e.data);
-        
-        let success = await compileCode(Object.keys(e.data))
-        
-        if (success) {
-            const hex = await llvm.getHex();
-            postMessage({
-                type: "hex",
-                body: hex,
-            });
-        } else {
-            postMessage({
-                type: "error",
-                body: "Compilation failed",
-            })
-        }
-
+    } else {
         postMessage({
-            type: "compile-complete",
+            target: "compile",
+            type: "error",
+            body: "Compilation failed",
         })
-
-        await clean();
     }
+
+    postMessage({
+        target: "compile",
+        type: "compile-complete",
+    })
+
+    await clean();
+}
+
+const lspUtil = new LSPUtil();
+let stdinQueue = ""
+
+function onInit() {
+    llvm.clangdStdio.stdin.write(stdinQueue);
+}
+
+async function handleClangdRequest(request) {
+    const message = lspUtil.HTTPWrapper( JSON.stringify(request) );
+
+    //ideally no messages should be sent until the worker has finished initialising
+    if (!llvm.initialised) {
+        stdinQueue += message;
+        return;
+    }
+
+    llvm.clangdStdio.stdin.write(message);
 }
 
 const llvm = new LLVM();

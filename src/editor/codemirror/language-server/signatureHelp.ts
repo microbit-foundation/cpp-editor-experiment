@@ -151,6 +151,8 @@ export const signatureHelp = (
       showTooltip.from(f, (val) => {
         const { result, pos } = val;
         if (result) {
+          //Stops plugin from crashing when this function gets called with no signatures
+          if (result.signatures.length < 1) return null;
           return {
             pos,
             above: true,
@@ -218,7 +220,7 @@ export const signatureHelp = (
     help: SignatureHelp,
     apiReferenceMap: ApiReferenceMap
   ): Node => {
-    const { activeSignature: activeSignatureIndex, signatures } = help;
+    const { activeSignature: activeSignatureIndex, activeParameter: activeParameterIndex, signatures } = help;
     // We intentionally do something minimal here to minimise distraction.
     const activeSignature =
       activeSignatureIndex === null
@@ -228,10 +230,9 @@ export const signatureHelp = (
       label,
       parameters,
       documentation: signatureDoc,
-      activeParameter: activeParameterIndex,
     } = activeSignature;
     const activeParameter =
-      activeParameterIndex !== undefined && parameters
+      activeParameterIndex !== null && parameters
         ? parameters[activeParameterIndex]
         : undefined;
     const activeParameterLabel = activeParameter?.label;
