@@ -15,8 +15,10 @@ import "./documentation.css";
 export const enum DocSections {
   Summary = 1 << 0,
   Example = 1 << 1,
-  Remainder = 1 << 2,
-  All = Summary | Example | Remainder,
+  Parameters = 1 << 2,
+  Return = 1 << 4,
+  Remainder = 1 << 8,
+  All = Summary | Example | Parameters | Return | Remainder,
 }
 
 export const renderDocumentation = (
@@ -95,6 +97,17 @@ export const subsetMarkdown = (
   }
   if (parts & DocSections.Example && split.example) {
     sections.push("`" + split.example + "`");
+  }
+  if (parts & DocSections.Parameters && split.params.length > 0) {
+    sections.push("**Parameters:**");
+    split.params.forEach((param) => {
+      const [name, ...rest] = param.split(' ')
+      const desc = rest.join(' ')
+      sections.push("- `"+ name + "` " + desc);
+    })
+  }
+  if (parts & DocSections.Return && split.return) {
+    sections.push("**Returns:**\n\n- " + split.return);
   }
   if (parts & DocSections.Remainder && split.remainder) {
     sections.push(split.remainder);
