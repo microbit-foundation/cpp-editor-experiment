@@ -125,7 +125,7 @@ export const autocompletion = (
                   },
                   type: item.kind ? mapCompletionKind[item.kind] : undefined,
                   detail: item.detail,
-                  info: documentationResolver,
+                  // info: documentationResolver,
                   boost: boost(item),
                   // Needed later for resolving.
                   item,
