@@ -96,7 +96,7 @@ export const subsetMarkdown = (
     sections.push(split.summary);
   }
   if (parts & DocSections.Example && split.example) {
-    sections.push("`" + split.example + "`");
+    sections.push("```\n" + split.example + "\n```");
   }
   if (parts & DocSections.Parameters && split.params.length > 0) {
     sections.push("**Parameters:**");
