@@ -136,12 +136,27 @@ export const diff = (before: Project, after: Project): FileChange[] => {
 
 export const EVENT_PROJECT_UPDATED = "project_updated";
 export const EVENT_TEXT_EDIT = "file_text_updated";
-// export const MAIN_FILE = "main.py";
 export const MAIN_FILE = "main.cpp";
 
 export const isNameLengthValid = (filename: string): boolean =>
   // This length is enforced by the underlying FS so we check it in the UI ahead of time.
   new TextEncoder().encode(filename).length <= 120;
+
+export interface ProjectFS {
+  project: Project;
+
+  setProjectName(projectName: string) : Promise<void>
+  read(filename: string): Promise<VersionedData>
+  exists(filename: string): Promise<boolean>
+  write(filename: string, content: Uint8Array | string, versionAction: VersionAction) : Promise<void>
+  remove(filename: string): Promise<void>
+
+  files(): Promise<Record<string, Uint8Array>>
+  clearDirty(): Promise<void>
+  get dirty() : boolean
+
+  statistics(): Promise<Statistics>
+}
 
 /**
  * The MicroPython file system adapted for convienient use from the UI.
@@ -155,7 +170,7 @@ export const isNameLengthValid = (filename: string): boolean =>
  * or fire any events. This plays well with uncontrolled embeddings of
  * third-party text editors.
  */
-export class FileSystem extends EventEmitter implements FlashDataSource {
+export class FileSystem extends EventEmitter implements ProjectFS {
   private initializing: Promise<void> | undefined;
   private storage: FSStorage;
   private fileVersions: Map<string, number> = new Map();
@@ -175,8 +190,6 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
       id: generateId(),
       name: undefined,
     };
-
-    // this.compiler = new CODALCompiler();
   }
 
   /**
@@ -435,71 +448,9 @@ export class FileSystem extends EventEmitter implements FlashDataSource {
     this.emit(EVENT_PROJECT_UPDATED, this.project);
   }
 
-  // TODO: Clean this up, streamline conversion process from Bytes to ihex 
-
-  async toHexForSave(): Promise<string> {
-    //const fs = await this.initialize();
-  
-    try {
-      let hex = await this.toHexString(await this.flashData());
-      let ihex = await this.hex2ascii(hex);
-      return ihex;
-    } catch (e: any) {
-      throw new HexGenerationError(e.message);
-    }
-  }
-
-  // Convert a byte array to hex
-  async toHexString(byteArray: Uint8Array) : Promise<string> {
-    return Array.prototype.map.call(byteArray, function(byte) {
-        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-    }).join('');
-  }
-
-  // Convert hex to ascii hex (ihex). Format read by the microbit.
-  async hex2ascii(hexx : string) : Promise<string>{
-    var hex = hexx.toString()
-    var str = '';
-    for (var i = 0; i < hex.length; i += 2)
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
-  }
-
   async clearDirty(): Promise<void> {
     this._dirty = false;
     return this.storage.clearDirty();
-  }
-
-  async fullFlashData(boardId: BoardId): Promise<Uint8Array> {
-    console.log("full")
-    try {
-      return await this.flashData();
-      // const fs = await this.initialize();
-      // return asciiToBytes(fs.getIntelHex(boardId.normalize().id));
-    } catch (e: any) {
-      throw new HexGenerationError(e.message);
-    }
-  }
-
-  async partialFlashData(boardId: BoardId): Promise<Uint8Array> {
-    try {
-      return await this.flashData();
-      // const fs = await this.initialize();
-      // return fs.getIntelHexBytes(boardId.normalize().id);
-    } catch (e: any) {
-      throw new HexGenerationError(e.message);
-    }
-  }
-
-  async flashData(): Promise<Uint8Array> {
-    try {
-      const _clang = clang('en');
-      await _clang.compiler.compile(await this.files());
-      const hex = await _clang.compiler.getHex();
-      return hex;
-    } catch (e: any) {
-      throw new HexGenerationError(e.message);
-    }
   }
 
   async files(): Promise<Record<string, Uint8Array>> {
