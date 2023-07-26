@@ -11,15 +11,12 @@ import { fromByteArray, toByteArray } from "base64-js";
 import EventEmitter from "events";
 import sortBy from "lodash.sortby";
 import { lineNumFromUint8Array } from "../common/text-util";
-import { BoardId } from "../device/board-id";
-import { FlashDataSource, HexGenerationError } from "../device/device";
 import { Logging } from "../logging/logging";
 import { MicroPythonSource } from "../micropython/micropython";
-import { asciiToBytes, extractModuleData, generateId } from "./fs-util";
+import { extractModuleData, generateId } from "./fs-util";
 import { Host } from "./host";
-import { PythonProject } from "./initial-project";
+import { ProjectFiles } from "./initial-project";
 import { FSStorage } from "./storage";
-import { clang } from "../clang/clang";
 
 const commonFsSize = 20 * 1024;
 
@@ -142,7 +139,7 @@ export const isNameLengthValid = (filename: string): boolean =>
   // This length is enforced by the underlying FS so we check it in the UI ahead of time.
   new TextEncoder().encode(filename).length <= 120;
 
-export interface ProjectFS {
+export interface FileSystem extends EventEmitter {
   project: Project;
 
   setProjectName(projectName: string) : Promise<void>
@@ -151,7 +148,11 @@ export interface ProjectFS {
   write(filename: string, content: Uint8Array | string, versionAction: VersionAction) : Promise<void>
   remove(filename: string): Promise<void>
 
-  files(): Promise<Record<string, Uint8Array>>
+  getProjectFiles() : Promise<ProjectFiles>
+  replaceWithProjectFiles(project: ProjectFiles): Promise<void>
+  replaceWithHexContents(projectName: string, hex: string): Promise<void>
+
+  files(): Promise<Record<string, Uint8Array>>  //maybe remove ? (this is a remnant from flashdatasource)
   clearDirty(): Promise<void>
   get dirty() : boolean
 
@@ -170,7 +171,7 @@ export interface ProjectFS {
  * or fire any events. This plays well with uncontrolled embeddings of
  * third-party text editors.
  */
-export class FileSystem extends EventEmitter implements ProjectFS {
+export class _FileSystem extends EventEmitter implements FileSystem {
   private initializing: Promise<void> | undefined;
   private storage: FSStorage;
   private fileVersions: Map<string, number> = new Map();
@@ -219,7 +220,7 @@ export class FileSystem extends EventEmitter implements ProjectFS {
    * We remember this so we can tell whether the user has edited
    * the project since for stats generation.
    */
-  private cachedInitialProject: PythonProject | undefined;
+  private cachedInitialProject: ProjectFiles | undefined;
 
   async initialize(): Promise<MicropythonFsHex> {
     if (this.fs) {
@@ -341,9 +342,9 @@ export class FileSystem extends EventEmitter implements ProjectFS {
     this.fileVersions.set(filename, current === undefined ? 1 : current + 1);
   }
 
-  async getPythonProject(): Promise<PythonProject> {
+  async getProjectFiles(): Promise<ProjectFiles> {
     const projectName = await this.storage.projectName();
-    const project: PythonProject = {
+    const project: ProjectFiles = {
       files: {},
       projectName,
     };
@@ -355,7 +356,7 @@ export class FileSystem extends EventEmitter implements ProjectFS {
     return project;
   }
 
-  async replaceWithMultipleFiles(project: PythonProject): Promise<void> {
+  async replaceWithProjectFiles(project: ProjectFiles): Promise<void> {
     const fs = await this.initialize();
     fs.ls().forEach((f) => fs.remove(f));
     for (const key in project.files) {

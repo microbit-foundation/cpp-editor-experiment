@@ -38,7 +38,7 @@ import { HexGenerator } from "../fs/hex-gen";
 import {
   defaultInitialProject,
   projectFilesToBase64,
-  PythonProject,
+  ProjectFiles,
 } from "../fs/initial-project";
 import { LanguageServerClient } from "../language-server/client";
 import { Logging } from "../logging/logging";
@@ -375,12 +375,12 @@ export class ProjectActions {
    * @returns True if we opened the project, false if the user cancelled.
    */
   private openProject = async (
-    project: PythonProject,
+    project: ProjectFiles,
     confirmPrompt?: string
   ): Promise<boolean> => {
     const confirmed = await this.confirmReplace(confirmPrompt);
     if (confirmed) {
-      await this.fs.replaceWithMultipleFiles(project);
+      await this.fs.replaceWithProjectFiles(project);
     }
     return confirmed;
   };
@@ -390,7 +390,7 @@ export class ProjectActions {
       type: "idea-open",
       message: slug,
     });
-    const pythonProject: PythonProject = {
+    const pythonProject: ProjectFiles = {
       files: projectFilesToBase64({
         [MAIN_FILE]: code,
       }),

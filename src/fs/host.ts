@@ -14,7 +14,7 @@ import {
 import { Logging } from "../logging/logging";
 import {
   defaultInitialProject,
-  PythonProject,
+  ProjectFiles,
   projectFilesToBase64,
 } from "./initial-project";
 import { parseMigrationFromUrl } from "./migration";
@@ -38,7 +38,7 @@ const messages = {
 export interface Host {
   createStorage(logging: Logging): FSStorage;
   shouldReinitializeProject(storage: FSStorage): Promise<boolean>;
-  createInitialProject(): Promise<PythonProject>;
+  createInitialProject(): Promise<ProjectFiles>;
   notifyReady(fs: FileSystem): void;
 }
 
@@ -61,7 +61,7 @@ export class DefaultHost implements Host {
     return !(await storage.exists(MAIN_FILE));
   }
 
-  async createInitialProject(): Promise<PythonProject> {
+  async createInitialProject(): Promise<ProjectFiles> {
     const migrationParseResult = parseMigrationFromUrl(this.url);
     if (migrationParseResult) {
       const { migration, postMigrationUrl } = migrationParseResult;
@@ -94,7 +94,7 @@ export class IframeHost implements Host {
     // If there is persistence then it is the embedder's problem.
     return true;
   }
-  createInitialProject(): Promise<PythonProject> {
+  createInitialProject(): Promise<ProjectFiles> {
     return new Promise((resolve) => {
       this.window.addEventListener("load", () =>
         notifyWorkspaceSync(this.parent)
@@ -180,7 +180,7 @@ const handleImportProject = (fs: FileSystem, data: any) => {
     fs.write(MAIN_FILE, data.project, VersionAction.INCREMENT);
   }
   if (!data.project || typeof data.project === "object") {
-    fs.replaceWithMultipleFiles(data.project);
+    fs.replaceWithProjectFiles(data.project);
   }
 };
 
@@ -217,7 +217,7 @@ const notifyWorkspaceLoaded = (host: Window) => {
  * We do this periodically when the code changes.
  */
 const notifyWorkspaceSave = async (fs: FileSystem, host: Window) => {
-  const project = await fs.getPythonProject();
+  const project = await fs.getProjectFiles();
   host.postMessage(
     {
       type: messages.type,

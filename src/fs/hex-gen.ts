@@ -2,7 +2,7 @@ import { BoardId } from "../device/board-id";
 import { FlashDataSource, HexGenerationError } from "../device/device";
 
 import { clang, Clang } from "../clang/clang";
-import { ProjectFS } from "./fs";
+import { FileSystem } from "./fs";
 
 export interface HexGenerator extends FlashDataSource {
     toHexForSave(): Promise<string>
@@ -11,7 +11,7 @@ export interface HexGenerator extends FlashDataSource {
 export class ClangHexGenerator implements HexGenerator {
     private clang : Clang;
 
-    constructor(private fs : ProjectFS) {
+    constructor(private fs : FileSystem) {
         this.clang = clang("en");
     }
 

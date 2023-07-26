@@ -13,7 +13,7 @@ import { BoardId } from "../device/board-id";
 import {
   diff,
   EVENT_PROJECT_UPDATED,
-  FileSystem,
+  _FileSystem,
   MAIN_FILE,
   Project,
   VersionAction,
@@ -49,12 +49,12 @@ const fsMicroPythonSource: MicroPythonSource = async () => {
 describe("Filesystem", () => {
   const logging = new NullLogging();
   const host = new DefaultHost();
-  let ufs = new FileSystem(logging, host, fsMicroPythonSource);
+  let ufs = new _FileSystem(logging, host, fsMicroPythonSource);
   let events: Project[] = [];
 
   beforeEach(() => {
     events = [];
-    ufs = new FileSystem(logging, host, fsMicroPythonSource);
+    ufs = new _FileSystem(logging, host, fsMicroPythonSource);
     ufs.addListener(EVENT_PROJECT_UPDATED, events.push.bind(events));
   });
 

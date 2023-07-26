@@ -16,7 +16,7 @@ import { MockDeviceConnection } from "./device/mock";
 import DocumentationProvider from "./documentation/documentation-hooks";
 import SearchProvider from "./documentation/search/search-hooks";
 import { ActiveEditorProvider } from "./editor/active-editor-hooks";
-import { FileSystem } from "./fs/fs";
+import { _FileSystem } from "./fs/fs";
 import { FileSystemProvider } from "./fs/fs-hooks";
 import { createHost } from "./fs/host";
 import { fetchMicroPython } from "./micropython/micropython";
@@ -45,7 +45,7 @@ const device = isMockDeviceMode()
   : new MicrobitWebUSBConnection({ logging });
 
 const host = createHost(logging);
-const fs = new FileSystem(logging, host, fetchMicroPython);
+const fs = new _FileSystem(logging, host, fetchMicroPython);
 const hexGenerator = new ClangHexGenerator(fs);
 
 // If this fails then we retry on access.
