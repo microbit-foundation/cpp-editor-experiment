@@ -34,6 +34,7 @@ import {
   readFileAsText,
   readFileAsUint8Array,
 } from "../fs/fs-util";
+import { HexGenerator } from "../fs/hex-gen";
 import {
   defaultInitialProject,
   projectFilesToBase64,
@@ -97,6 +98,7 @@ interface ProjectStatistics extends Statistics {
 export class ProjectActions {
   constructor(
     private fs: FileSystem,
+    private hexGen: HexGenerator,
     private device: DeviceConnection,
     private actionFeedback: ActionFeedback,
     private dialogs: Dialogs,
@@ -531,7 +533,7 @@ export class ProjectActions {
           progress: value,
         });
       };
-      await this.device.flash(this.fs, { partial: true, progress });
+      await this.device.flash(this.hexGen, { partial: true, progress });
     } catch (e) {
       if (e instanceof HexGenerationError) {
         this.actionFeedback.expectedError({
@@ -563,7 +565,7 @@ export class ProjectActions {
 
     let download: string | undefined;
     try {
-      download = await this.fs.toHexForSave();
+      download = await this.hexGen.toHexForSave();
     } catch (e: any) {
       this.actionFeedback.expectedError({
         title: this.intl.formatMessage({ id: "failed-to-build-hex" }),

@@ -30,6 +30,8 @@ import SettingsProvider from "./settings/settings";
 import BeforeUnloadDirtyCheck from "./workbench/BeforeUnloadDirtyCheck";
 import { SelectionProvider } from "./workbench/use-selection";
 import Workbench from "./workbench/Workbench";
+import { ClangHexGenerator } from "./fs/hex-gen";
+import { HexGenProvider } from "./fs/hex-hooks";
 
 const isMockDeviceMode = () =>
   // We use a cookie set from the e2e tests. Avoids having separate test and live builds.
@@ -44,6 +46,7 @@ const device = isMockDeviceMode()
 
 const host = createHost(logging);
 const fs = new FileSystem(logging, host, fetchMicroPython);
+const hexGenerator = new ClangHexGenerator(fs);
 
 // If this fails then we retry on access.
 fs.initializeInBackground();
@@ -71,26 +74,28 @@ const App = () => {
             <SessionSettingsProvider>
               <TranslationProvider>
                 <FileSystemProvider value={fs}>
-                  <DeviceContextProvider value={device}>
-                    <LanguageServerClientProvider>
-                      <BeforeUnloadDirtyCheck />
-                      <DocumentationProvider>
-                        <SearchProvider>
-                          <SelectionProvider>
-                            <DialogProvider>
-                              <RouterProvider>
-                                <ProjectDropTarget>
-                                  <ActiveEditorProvider>
-                                    <Workbench />
-                                  </ActiveEditorProvider>
-                                </ProjectDropTarget>
-                              </RouterProvider>
-                            </DialogProvider>
-                          </SelectionProvider>
-                        </SearchProvider>
-                      </DocumentationProvider>
-                    </LanguageServerClientProvider>
-                  </DeviceContextProvider>
+                  <HexGenProvider value={hexGenerator}>
+                    <DeviceContextProvider value={device}>
+                      <LanguageServerClientProvider>
+                        <BeforeUnloadDirtyCheck />
+                        <DocumentationProvider>
+                          <SearchProvider>
+                            <SelectionProvider>
+                              <DialogProvider>
+                                <RouterProvider>
+                                  <ProjectDropTarget>
+                                    <ActiveEditorProvider>
+                                      <Workbench />
+                                    </ActiveEditorProvider>
+                                  </ProjectDropTarget>
+                                </RouterProvider>
+                              </DialogProvider>
+                            </SelectionProvider>
+                          </SearchProvider>
+                        </DocumentationProvider>
+                      </LanguageServerClientProvider>
+                    </DeviceContextProvider>
+                  </HexGenProvider>
                 </FileSystemProvider>
               </TranslationProvider>
             </SessionSettingsProvider>
