@@ -30,4 +30,7 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        run: npm run ghp-deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_dir: ./build  
