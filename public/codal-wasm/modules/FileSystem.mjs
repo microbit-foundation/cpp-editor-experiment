@@ -56,21 +56,8 @@ export default class FileSystem extends EmProcess {
 
     async unpack(...paths) {
         return Promise.all(paths.flat().map(async (path) => {
-            postMessage({
-                target: "worker",
-                type: "info",
-                body: "Downloading root",
-            })
-
-
             let file = await fetch(path);
             let buffer = new Uint8Array(await file.arrayBuffer());
-
-            postMessage({
-                target: "worker",
-                type: "info",
-                body: "Unpacking",
-            })
 
             if (path.endsWith(".br")) {
                 // it's a brotli file, decompress it
@@ -87,7 +74,7 @@ export default class FileSystem extends EmProcess {
             await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
             await this.FS.unlink("/tmp/archive.pack");
             
-            //Brotli isnt used after this.S
+            //Brotli isnt used after this.
         }));
     }
 
