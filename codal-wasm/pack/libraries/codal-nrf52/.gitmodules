@@ -1,0 +1,3 @@
+[submodule "nrfx"]
+	path = nrfx
+	url = https://github.com/Johnn333/nrfx/tree/old
