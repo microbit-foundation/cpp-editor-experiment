@@ -5,7 +5,6 @@
  */
 import { CreateFile, DeleteFile } from "vscode-languageserver-protocol";
 import { diff, EVENT_PROJECT_UPDATED, FileSystem, Project } from "../fs/fs";
-import { isPythonFile } from "../project/project-utils";
 import { createUri, LanguageServerClient } from "./client";
 
 export type FsChangesListener = (current: Project) => any;
@@ -30,20 +29,15 @@ export const trackFsChanges = (
   const documentText = async (name: string) =>
     new TextDecoder().decode((await fs.read(name)).data);
   const diffAndUpdateClient = async (current: Project) => {
-    const changes = diff(previous, current).filter((c) => isPythonFile(c.name));
+    const changes = diff(previous, current)//.filter((c) => isPythonFile(c.name));  //filter for cpp/h ?
     previous = current;
     for (const change of changes) {
       const uri = createUri(change.name);
       switch (change.type) {
         case "create": {
-          const params: CreateFile = {
-            uri,
-            kind: "create",
-          };
-          client.connection.sendNotification("pyright/createFile", params);
           client.didOpenTextDocument({
             textDocument: {
-              languageId: "python",
+              languageId: "c++",
               text: await documentText(change.name),
               uri,
             },
@@ -51,11 +45,6 @@ export const trackFsChanges = (
           break;
         }
         case "delete": {
-          const params: DeleteFile = {
-            uri,
-            kind: "delete",
-          };
-          client.connection.sendNotification("pyright/deleteFile", params);
           client.didCloseTextDocument({
             textDocument: {
               uri,

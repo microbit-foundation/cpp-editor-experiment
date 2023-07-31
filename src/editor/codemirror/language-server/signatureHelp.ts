@@ -294,7 +294,7 @@ export const signatureHelp = (
       parent.appendChild(
         renderDocumentation(
           signatureDoc,
-          DocSections.Summary | DocSections.Example
+          DocSections.All // TODO: should check which sections can be rendered in this case (previously set as Summary | Example)
         )
       );
     }
