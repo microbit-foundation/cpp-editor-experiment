@@ -26,5 +26,3 @@ jobs:
 
       - name: Deploy
         run: npm run ghp-deploy
-        with:
-          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
