@@ -15,7 +15,7 @@ import { BoardId } from "../device/board-id";
 import { FlashDataSource, HexGenerationError } from "../device/device";
 import { Logging } from "../logging/logging";
 import { MicroPythonSource } from "../micropython/micropython";
-import { asciiToBytes, extractModuleData, generateId } from "./fs-util";
+import { extractModuleData, generateId } from "./fs-util";
 import { Host } from "./host";
 import { PythonProject } from "./initial-project";
 import { FSStorage } from "./storage";

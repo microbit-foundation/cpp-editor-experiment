@@ -65,8 +65,6 @@ import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
 import CreateFileQuestion from "./CreateFile";
 import { DefaultedProject } from "./project-hooks";
 import {
-  ensureCppExtension,
-  ensurePythonExtension,
   isPythonFile,
   validateNewFilename,
 } from "./project-utils";
