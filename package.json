@@ -76,6 +76,7 @@
     "node": ">=16.0",
     "npm": ">=8.0"
   },
+  "homepage": "https://hamer0.github.io/cpp-editor",
   "scripts": {
     "bundle-size-explorer": "source-map-explorer 'build/static/js/*.js'",
     "bundle-size-report": "source-map-explorer 'build/static/js/*.js' --html reports/bundle-size.html",
