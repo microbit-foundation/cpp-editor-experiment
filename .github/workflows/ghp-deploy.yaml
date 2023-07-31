@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Git
-        run: |
-          git config --global user.email "lewishamer0@gmail.com"
-          git config --global user.name "hamer0"
-          git config --global credential.helper store
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -31,5 +26,5 @@ jobs:
 
       - name: Deploy
         run: npm run ghp-deploy
-        env:
-          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        with:
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
