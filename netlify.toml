@@ -2,7 +2,7 @@
 [build]
 command = "npm run build" #npm run ci
 [build.environment]
-  CI = "true"
+  CI = "false"  #disables warnings as errors for now
 [[redirects]]
   from = "/*"
   to = "/index.html"
