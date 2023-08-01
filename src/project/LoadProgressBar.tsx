@@ -61,6 +61,7 @@ export const LoadProgressBar = ({
           <Progress 
             value={progress}
             size='md' 
+            colorScheme='purple'
             style={{
               marginTop: 0,
               borderRadius:99,
