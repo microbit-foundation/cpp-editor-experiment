@@ -72,6 +72,11 @@ const ProjectActionBar = React.forwardRef(
             marginTop: 0,
             borderRadius:99,
           }}
+          sx={{ // animate transition when progress changes: https://github.com/chakra-ui/chakra-ui/issues/68#issuecomment-949696853
+            "& > div:first-of-type": {
+              transitionProperty: "width",
+            },
+          }}
         /> 
           
       </Stack>
