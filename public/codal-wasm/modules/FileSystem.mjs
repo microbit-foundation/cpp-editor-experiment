@@ -57,7 +57,6 @@ export default class FileSystem extends EmProcess {
     async unpack(onProgress = (progress)=>{}, ...paths) {
         return Promise.all(paths.flat().map(async (path) => {
             const response = await fetch(path);
-
             const buffer = await this.getContent(response, onProgress);
 
             if (path.endsWith(".br")) {
@@ -81,9 +80,12 @@ export default class FileSystem extends EmProcess {
 
     //https://javascript.info/fetch-progress
     async getContent(response, onProgress = (progress)=>{}) {
-        const reader = response.body.getReader();
-        const contentLength = +response.headers.get('Content-Length');
+        const contentLengthHeader = response.headers.get('Content-Length')
+        const contentLength = +contentLengthHeader;
 
+        const reader = response.body.getReader();
+
+        if(!contentLengthHeader) console.warn("Content Length Header is missing or not yet loaded!\nContent still download, although progress may display incorrectly");
         console.log(`Download Size: ${contentLength}`);
 
         let receivedLength = 0; // received that many bytes at the moment
@@ -97,7 +99,6 @@ export default class FileSystem extends EmProcess {
 
             chunks.push(value);
             receivedLength += value.length;
-            
             onProgress(receivedLength / contentLength);
         }
 

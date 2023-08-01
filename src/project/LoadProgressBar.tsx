@@ -16,7 +16,10 @@ export const LoadProgressBar = ({
     const [progressText, setProgressText] = useState('Loading...');
 
     const progressCallback = (progress : number, msg? : string) => {
-        setProgress(progress * 100);
+        if (progress < 0 || progress > 1) return;
+        
+        const percent = progress * 100;
+        setProgress(percent);
         setProgressText(msg || 'Loading...');
     }
   
