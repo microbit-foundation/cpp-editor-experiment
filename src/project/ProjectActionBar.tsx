@@ -62,7 +62,7 @@ const ProjectActionBar = React.forwardRef(
             />
             <Text fontWeight='bold'>{progressText}</Text>
           </HStack>
-          <Text fontWeight='bold'>{progress}%</Text>
+          <Text fontWeight='bold'>{progress.toFixed(0)}%</Text>
         </HStack>
 
         <Progress 
