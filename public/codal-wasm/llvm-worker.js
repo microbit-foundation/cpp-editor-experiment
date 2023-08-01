@@ -34,13 +34,15 @@ class ProcessWithProgress {
             this.callback(acc / totalWeight, process.label);
 
             const weight = process.weight ? process.weight : 1;
-            acc += weight;
+            const onProcessProgress = (progress) => { this.callback(acc + (weight*progress) / totalWeight, process.label) }
 
             const fn = process.fn;
             if (fn.constructor.name === 'AsyncFunction')
-                await fn();
+                await fn(onProcessProgress);
             else
-                fn();
+                fn(onProcessProgress);
+
+            acc += weight;
         }
 
         this.callback(1, "Done");
@@ -74,9 +76,9 @@ class LLVM {
                 {
                     label: "Downloading", 
                     weight: 92,
-                    fn: async ()=>{
+                    fn: async (progressCallback)=>{
                         this.fileSystem = await new FileSystem();
-                        await this.fileSystem.unpack("./root.pack.br"); //download
+                        await this.fileSystem.unpack(progressCallback, "./root.pack.br"); 
                     }
                 },
                 {

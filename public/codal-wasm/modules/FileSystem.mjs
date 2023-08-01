@@ -54,10 +54,11 @@ export default class FileSystem extends EmProcess {
         })();
     }
 
-    async unpack(...paths) {
+    async unpack(onProgress = (progress)=>{}, ...paths) {
         return Promise.all(paths.flat().map(async (path) => {
-            let file = await fetch(path);
-            let buffer = new Uint8Array(await file.arrayBuffer());
+            const response = await fetch(path);
+
+            const buffer = await this.getContent(response, onProgress);
 
             if (path.endsWith(".br")) {
                 // it's a brotli file, decompress it
@@ -76,6 +77,37 @@ export default class FileSystem extends EmProcess {
             
             //Brotli isnt used after this.
         }));
+    }
+
+    //https://javascript.info/fetch-progress
+    async getContent(response, onProgress = (progress)=>{}) {
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length');
+
+        let receivedLength = 0; // received that many bytes at the moment
+        let chunks = []; // array of received binary chunks (comprises the body)
+        while(true) {
+            const {done, value} = await reader.read();
+
+            if (done) {
+                break;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+
+            onProgress(receivedLength / contentLength);
+        }
+
+        let chunksAll = new Uint8Array(receivedLength);
+        let position = 0;
+
+        for(let chunk of chunks) {
+            chunksAll.set(chunk, position);
+            position += chunk.length;
+        }
+
+        return chunksAll
     }
 
     async cachedLazyFile(path, size, md5, url) {
