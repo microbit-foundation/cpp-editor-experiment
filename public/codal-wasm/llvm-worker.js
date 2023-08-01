@@ -75,7 +75,7 @@ class LLVM {
             [
                 {
                     label: "Downloading", 
-                    weight: 92,
+                    weight: 95,
                     fn: async (progressCallback)=>{
                         this.fileSystem = await new FileSystem();
                         await this.fileSystem.unpack(progressCallback, "./root.pack.br"); 
@@ -83,14 +83,14 @@ class LLVM {
                 },
                 {
                     label: "Syncing Files",
-                    weight: 1,
+                    weight: 0.1,
                     fn: async ()=>{
                         await this.fileSystem.pull();
                     }
                 },
                 {
                     label: "Initialising Tools",
-                    weight: 3,
+                    weight: 2,
                     fn: async ()=>{
                         const processConfig = {FS: this.fileSystem.FS};
                 
@@ -110,7 +110,7 @@ class LLVM {
                 },
                 {
                     label: "Generating PCH",
-                    weight: 3,
+                    weight: 2,
                     fn: async ()=> {
                         // Generate precompiled header files. Massively speeds up MicroBit.h include.
                         await llvm.run('clang++', '-x', 'c++-header','-Xclang','-emit-pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
@@ -125,7 +125,7 @@ class LLVM {
                 },
                 {
                     label: "Launching Language Server",
-                    weight: 1,
+                    weight: 0.1,
                     fn: ()=>{
                         const clangdModule = this.tools['clangd']._module;
                         this.clangdStdio = new ClangdStdio(clangdModule);
