@@ -74,7 +74,7 @@ class LLVM {
         const initProcesses = new ProcessWithProgress(
             [
                 {
-                    label: "Downloading", 
+                    label: "Downloading...", 
                     weight: 95,
                     fn: async (progressCallback)=>{
                         this.fileSystem = await new FileSystem();
@@ -82,14 +82,14 @@ class LLVM {
                     }
                 },
                 {
-                    label: "Syncing Files",
+                    label: "Syncing Files...",
                     weight: 0.1,
                     fn: async ()=>{
                         await this.fileSystem.pull();
                     }
                 },
                 {
-                    label: "Initialising Tools",
+                    label: "Initialising Tools...",
                     weight: 2,
                     fn: async ()=>{
                         const processConfig = {FS: this.fileSystem.FS};
@@ -109,7 +109,7 @@ class LLVM {
                     }
                 },
                 {
-                    label: "Generating PCH",
+                    label: "Configuring...",
                     weight: 2,
                     fn: async ()=> {
                         // Generate precompiled header files. Massively speeds up MicroBit.h include.
@@ -123,15 +123,6 @@ class LLVM {
                         );
                     }
                 },
-                {
-                    label: "Launching Language Server",
-                    weight: 0.1,
-                    fn: ()=>{
-                        const clangdModule = this.tools['clangd']._module;
-                        this.clangdStdio = new ClangdStdio(clangdModule);
-                        llvm.run('clangd');
-                    }
-                }
             ],
             progressCallback,
             () => {
@@ -143,9 +134,13 @@ class LLVM {
         )
 
         await initProcesses.run();
+      
+        const clangdModule = this.tools['clangd']._module;
+        this.clangdStdio = new ClangdStdio(clangdModule);
+        llvm.run('clangd');
     
         this.initialised = true;
-        onInit();
+        onInit();  
     };
 
     onprocessstart = () => {};
