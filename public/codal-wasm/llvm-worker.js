@@ -6,6 +6,59 @@ import ClangdProcess from "./modules/ClangdProcess.mjs";
 import { LSPUtil } from "./lsp.mjs";
 import { ClangdStdio } from "./clangd-stdio.mjs";
 
+class ProcessWithProgress {
+    processes = [];
+    constructor(
+        processes,
+        callback,
+        doneCallback,
+    ){
+        this.processes = processes;
+        this.callback = callback;
+        this.doneCallback = doneCallback;
+    }
+
+    callback = ()=>{}
+    doneCallback = ()=>{}
+
+    async run() {
+        const total = this.processes.length;
+        const totalWeight = this.processes.reduce((accumulator, process) => {
+            const val = process.weight ? process.weight : 1;
+            return accumulator + val; 
+        }, 0)
+
+        let acc = 0;
+        for(let i=0; i<total; i++) {
+            const process = this.processes[i];
+            this.callback(acc / totalWeight, process.label);
+
+            const weight = process.weight ? process.weight : 1;
+            const onProcessProgress = (progress) => { this.callback(acc + (weight*progress) / totalWeight, process.label) }
+
+            const fn = process.fn;
+            if (fn.constructor.name === 'AsyncFunction')
+                await fn(onProcessProgress);
+            else
+                fn(onProcessProgress);
+
+            acc += weight;
+        }
+
+        this.callback(1, "Done");
+        this.doneCallback();
+    }
+}
+
+let progressCallback = (progress, msg) => {
+    postMessage({
+        target: "worker",
+        type: "progress",
+        body: msg,
+        progress,
+    })
+}
+
 class LLVM {
     initialised = false;
 
@@ -18,76 +71,76 @@ class LLVM {
     clangdStdio;
 
     async init() {
-        postMessage({
-            target: "worker",
-            type: "info",
-            body: "Populating File System",
-        })
+        const initProcesses = new ProcessWithProgress(
+            [
+                {
+                    label: "Downloading...", 
+                    weight: 95,
+                    fn: async (progressCallback)=>{
+                        this.fileSystem = await new FileSystem();
+                        await this.fileSystem.unpack(progressCallback, "./root.pack.br"); 
+                    }
+                },
+                {
+                    label: "Syncing Files...",
+                    weight: 0.1,
+                    fn: async ()=>{
+                        await this.fileSystem.pull();
+                    }
+                },
+                {
+                    label: "Initialising Tools...",
+                    weight: 2,
+                    fn: async ()=>{
+                        const processConfig = {FS: this.fileSystem.FS};
+                
+                        const tools = {
+                            "llvm-box": new LlvmBoxProcess(processConfig),
+                            "clangd": new ClangdProcess({
+                                ...processConfig,
+                                noFSInit: true,
+                            })
+                        };
+                        this.tools = tools;
+                
+                        for (let tool in tools) {
+                            await tools[tool];
+                        };
+                    }
+                },
+                {
+                    label: "Configuring...",
+                    weight: 2,
+                    fn: async ()=> {
+                        // Generate precompiled header files. Massively speeds up MicroBit.h include.
+                        await llvm.run('clang++', '-x', 'c++-header','-Xclang','-emit-pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
+                            '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
+                            '-fwrapv','-fno-rtti','-fno-threadsafe-statics','-fno-exceptions','-fno-unwind-tables','-Wno-array-bounds','-include', '/include/codal_extra_definitions.h',
+                            '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
+                            '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
+                            '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
+                            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h'
+                        );
+                    }
+                },
+            ],
+            progressCallback,
+            () => {
+                postMessage({
+                    target: "worker",
+                    type: "progress/done",
+                })
+            }
+        )
 
-        const fileSystem = await new FileSystem();
-        this.fileSystem = fileSystem;
-
-        await fileSystem.unpack("./root.pack.br");
-
-        await fileSystem.pull();
-
-        const processConfig = {
-            FS: fileSystem.FS
-        };
-
-        postMessage({
-            target: "worker",
-            type: "info",
-            body: "Initialising Tools",
-        })
-
-        const tools = {
-            "llvm-box": new LlvmBoxProcess(processConfig),
-            "clangd": new ClangdProcess({
-                ...processConfig,
-                noFSInit: true,
-            })
-        };
-        this.tools = tools;
-
-        for (let tool in tools) {
-            await tools[tool];
-        };
-
-        postMessage({
-            target: "compile",
-            type: "info",
-            body: "Generating PCH",
-        })
-
-        // Generate precompiled header files. Massively speeds up MicroBit.h include.
-        await llvm.run('clang++', '-x', 'c++-header','-Xclang','-emit-pch','--target=arm-none-eabi','-DMICROBIT_EXPORTS',...includeConst,'-Wno-expansion-to-defined','-mcpu=cortex-m4','-mthumb','-mfpu=fpv4-sp-d16',
-            '-mfloat-abi=softfp','-fno-exceptions','-fno-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Wno-unused-parameter','-std=c++11',
-            '-fwrapv','-fno-rtti','-fno-threadsafe-statics','-fno-exceptions','-fno-unwind-tables','-Wno-array-bounds','-include', '/include/codal_extra_definitions.h',
-            '-Wno-inconsistent-missing-override','-Wno-unknown-attributes','-Wno-uninitialized','-Wno-unused-private-field','-Wno-overloaded-virtual','-Wno-mismatched-tags','-Wno-deprecated-register',
-            '-I"/include"','-O2','-g','-DNDEBUG','-DAPP_TIMER_V2','-DAPP_TIMER_V2_RTC1_ENABLED','-DNRF_DFU_TRANSPORT_BLE=1','-DNRF52833_XXAA','-DNRF52833','-DTARGET_MCU_NRF52833',
-            '-DNRF5','-DNRF52833','-D__CORTEX_M4','-DS113','-DTOOLCHAIN_GCC', '-D__START=target_start','-MMD','-MT','main.cpp.obj','-MF','DEPFILE',
-            '-o','../include/MicroBit.h.pch','-c', '/libraries/codal-microbit-v2/model/MicroBit.h'
-        );
-        
-        postMessage({
-            target: "worker",
-            type: "info",
-            body: "Readying clangd",
-        })
-
+        await initProcesses.run();
+      
         const clangdModule = this.tools['clangd']._module;
         this.clangdStdio = new ClangdStdio(clangdModule);
         llvm.run('clangd');
-
-        postMessage({
-            target: "worker",
-            type: "info",
-            body: "Ready",
-        })
-
+    
         this.initialised = true;
-        onInit();
+        onInit();  
     };
 
     onprocessstart = () => {};

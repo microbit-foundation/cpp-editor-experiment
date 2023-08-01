@@ -15,6 +15,7 @@ export const clang = (langauge : string) : Clang => {
     if (clangObj) return clangObj;
 
     const clangWorker = new Worker(`${baseUrl}codal-wasm/llvm-worker.js`, {type:"module"});
+
     const compiler = new CODALCompiler(clangWorker);
     const clangd = new Clangd(clangWorker, langauge);
 
@@ -38,11 +39,23 @@ export const clang = (langauge : string) : Clang => {
     return clangObj;
 }
 
+let progressCallback = (progress : number, msg : string) => {console.log(`[${(progress * 100).toFixed(0)}%] ${msg}`);}
+export function onProgress(callback : (progress:number, msg:string)=>void) {
+    progressCallback = callback;
+}
+
+let loadedCallback = () => {}
+export function onLoaded(callback : ()=>void) {
+    loadedCallback = callback;
+}
+
 function handleWorkerMessage(msg : any) {
     switch (msg.type) {
-        case "info":    console.log(`[Worker] ${msg.body}`);   break;
-        case "error":   console.error(`[Worker] Error: ${msg.body}`);   break;
-        default:        console.warn(`Unhandled message '${msg.type}' from worker.\nFull message:\n${msg}`);
+        case "info":        console.log(`[Worker] ${msg.body}`); break;
+        case "error":       console.error(`[Worker] Error: ${msg.body}`); break;
+        case "progress":    progressCallback(msg.progress, msg.body); break;
+        case "progress/done": loadedCallback(); break;
+        default:            console.warn(`Unhandled message '${msg.type}' from worker.\nFull message:\n${msg}`);
     }
 }
 
