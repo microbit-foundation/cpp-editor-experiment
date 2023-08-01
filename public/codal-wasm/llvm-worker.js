@@ -10,13 +10,16 @@ class ProcessWithProgress {
     processes = [];
     constructor(
         processes,
-        callback
+        callback,
+        doneCallback,
     ){
         this.processes = processes;
         this.callback = callback;
+        this.doneCallback = doneCallback;
     }
 
-    callback = () => {}
+    callback = ()=>{}
+    doneCallback = ()=>{}
 
     async run() {
         const total = this.processes.length;
@@ -33,10 +36,18 @@ class ProcessWithProgress {
         }
 
         this.callback(1, "Done");
+        this.doneCallback();
     }
 }
 
-let progressCallback = (progress, msg) => {console.log(`[${(progress * 100).toFixed(0)}%] ${msg}`)}
+let progressCallback = (progress, msg) => {
+    postMessage({
+        target: "worker",
+        type: "progress",
+        body: msg,
+        progress,
+    })
+}
 
 class LLVM {
     initialised = false;
@@ -108,6 +119,12 @@ class LLVM {
                 }
             ],
             progressCallback,
+            () => {
+                postMessage({
+                    target: "worker",
+                    type: "progress/done",
+                })
+            }
         )
 
         await initProcesses.run();
@@ -323,7 +340,6 @@ onmessage = async(e) => {
     switch (msg.type) {
         case "clangd": handleClangdRequest(msg.body); break;
         case "compile": handleCompileRequest(msg.body); break;
-        case "callbacks": handleCallbackRequest(msg.callback); break;
         default: 
             postMessage({
                 target: "worker",
@@ -334,8 +350,6 @@ onmessage = async(e) => {
             
     }
 }
-
-function handleCallbackRequest(callback) {}
 
 async function handleCompileRequest(files) {
     if (!llvm.initialised) {
