@@ -23,12 +23,20 @@ class ProcessWithProgress {
 
     async run() {
         const total = this.processes.length;
+        const totalWeight = this.processes.reduce((accumulator, process) => {
+            const val = process.weight ? process.weight : 1;
+            return accumulator + val; 
+        }, 0)
 
+        let acc = 0;
         for(let i=0; i<total; i++) {
             const process = this.processes[i];
-            const fn = process.fn;
-            this.callback(i / total, process.label);
+            this.callback(acc / totalWeight, process.label);
 
+            const weight = process.weight ? process.weight : 1;
+            acc += weight;
+
+            const fn = process.fn;
             if (fn.constructor.name === 'AsyncFunction')
                 await fn();
             else
@@ -65,6 +73,7 @@ class LLVM {
             [
                 {
                     label: "Downloading", 
+                    weight: 2,
                     fn: async ()=>{
                         this.fileSystem = await new FileSystem();
                         await this.fileSystem.unpack("./root.pack.br"); //download
@@ -72,12 +81,14 @@ class LLVM {
                 },
                 {
                     label: "Syncing Files",
+                    weight: 0.1,
                     fn: async ()=>{
                         await this.fileSystem.pull();
                     }
                 },
                 {
                     label: "Initialising Tools",
+                    weight: 0.5,
                     fn: async ()=>{
                         const processConfig = {FS: this.fileSystem.FS};
                 
@@ -111,6 +122,7 @@ class LLVM {
                 },
                 {
                     label: "Launching Language Server",
+                    weight: 0.1,
                     fn: ()=>{
                         const clangdModule = this.tools['clangd']._module;
                         this.clangdStdio = new ClangdStdio(clangdModule);
