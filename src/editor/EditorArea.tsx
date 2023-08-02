@@ -19,8 +19,6 @@ import UndoRedoControls from "./UndoRedoControls";
 interface EditorAreaProps extends BoxProps {
   selection: WorkbenchSelection;
   onSelectedFileChanged: (filename: string) => void;
-  simulatorShown: boolean;
-  onSimulatorExpand: () => void;
 }
 
 /**
@@ -32,8 +30,6 @@ const EditorArea = React.forwardRef(
     {
       selection,
       onSelectedFileChanged,
-      simulatorShown,
-      onSimulatorExpand,
       ...props
     }: EditorAreaProps,
     simulatorButtonRef: ForwardedRef<HTMLButtonElement>
@@ -53,7 +49,7 @@ const EditorArea = React.forwardRef(
           width="100%"
           alignItems="center"
           justifyContent="space-between"
-          pr={!simulatorShown ? 0 : isWideScreen ? 10 : 5}
+          pr={isWideScreen ? 10 : 5}
           pl={isWideScreen ? "3rem" : "2rem"}
           py={2}
           height={topBarHeight}
@@ -71,18 +67,6 @@ const EditorArea = React.forwardRef(
           />
           <Flex alignItems="center">
             <ZoomControls display={["none", "none", "none", "flex"]} />
-            {!simulatorShown && (
-              <HideSplitViewButton
-                aria-label={intl.formatMessage({ id: "simulator-expand" })}
-                onClick={onSimulatorExpand}
-                splitViewShown={simulatorShown}
-                direction="expandLeft"
-                text={intl.formatMessage({ id: "simulator-title" })}
-                ml={5}
-                boxShadow="none"
-                ref={simulatorButtonRef}
-              />
-            )}
           </Flex>
         </Flex>
         {/* Just for the line */}
