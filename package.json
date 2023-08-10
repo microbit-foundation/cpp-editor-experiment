@@ -96,7 +96,7 @@
     "i18n:compile": "node bin/tidy-lang.js && formatjs compile-folder --ast lang src/messages",
     "i18n:convert": "node bin/tidy-lang.js && node bin/crowdin-convert.js",
     "fix-licensing-headers": "node bin/fix-licensing-headers.js",
-    "ghp-deploy": "gh-pages -d build"
+    "reload-examples": "sh bin/update-examples.sh && node bin/parse-examples.js"
   },
   "eslintConfig": {
     "extends": [
