@@ -112,8 +112,7 @@ export const autocompletion = (
                     ];
                     if (
                       // funcParensDisabled is set to true by Pyright for e.g. a function completion in an import
-                      (completion.type === "function" &&
-                        !item.data.funcParensDisabled) ||
+                      (completion.type === "function") ||
                       completion.type === "method"
                     ) {
                       const bracketTransaction = insertBracket(view.state, "(");
