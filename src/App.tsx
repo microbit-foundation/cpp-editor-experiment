@@ -32,6 +32,7 @@ import { SelectionProvider } from "./workbench/use-selection";
 import Workbench from "./workbench/Workbench";
 import { ClangHexGenerator } from "./fs/hex-gen";
 import { HexGenProvider } from "./fs/hex-hooks";
+import { BasicFileSystem } from "./fs/basic-fs";
 
 const isMockDeviceMode = () =>
   // We use a cookie set from the e2e tests. Avoids having separate test and live builds.
@@ -45,11 +46,14 @@ const device = isMockDeviceMode()
   : new MicrobitWebUSBConnection({ logging });
 
 const host = createHost(logging);
-const fs = new _FileSystem(logging, host, fetchMicroPython);
-const hexGenerator = new ClangHexGenerator(fs);
+// const fs = new _FileSystem(logging, host, fetchMicroPython);
+const bfs = new BasicFileSystem(logging, host);
+const hexGenerator = new ClangHexGenerator(bfs);
 
 // If this fails then we retry on access.
-fs.initializeInBackground();
+// fs.initializeInBackground();
+bfs.initialize(); //should be able to get away with just letting this run since clang also has to initialise, which takes significantly longer
+
 
 const App = () => {
   useEffect(() => {
@@ -73,7 +77,7 @@ const App = () => {
           <SettingsProvider>
             <SessionSettingsProvider>
               <TranslationProvider>
-                <FileSystemProvider value={fs}>
+                <FileSystemProvider value={bfs}>
                   <HexGenProvider value={hexGenerator}>
                     <DeviceContextProvider value={device}>
                       <LanguageServerClientProvider>
