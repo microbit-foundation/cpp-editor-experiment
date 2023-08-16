@@ -11,7 +11,7 @@ import DocumentationHeading from "../common/DocumentationHeading";
 
 interface IdeaCardProps {
   name: string;
-  image: SimpleImage;
+  image?: SimpleImage;
   isV2Only?: boolean;
   onClick: () => void;
 }
@@ -34,11 +34,11 @@ const IdeaCard = ({ name, image, isV2Only, onClick }: IdeaCardProps) => {
       _focusVisible={focusStyles}
       _focus={focusStyles}
     >
-      <Image
+      {/* <Image
         borderTopRadius="lg"
-        src={imageUrlBuilder.image(image.asset).width(550).url()}
+        src={image.asset} //imageUrlBuilder.image(image.asset).width(550).url()
         alt=""
-      />
+      /> */}
       <DocumentationHeading
         alignSelf="flex-start"
         textAlign="left"

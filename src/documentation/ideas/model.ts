@@ -4,14 +4,23 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { PortableText, SimpleImage, Slug } from "../../common/sanity";
+import { SanityContent, Slug } from "../../common/sanity";
 import { HasCompatibility } from "../common/model";
 
 export interface Idea extends HasCompatibility {
   _id: string;
   name: string;
-  image: SimpleImage;
-  content?: PortableText;
+  sanityContent?: SanityContent;
+  simpleContent?: SimpleIdeaContent,
   language: string;
   slug: Slug;
+}
+
+/**
+ * Wrapper around simple content format, rendering markdown
+ */
+export interface SimpleIdeaContent {
+  //image
+  code:string,
+  markdownContent?:string,
 }

@@ -21,6 +21,7 @@ import DocumentationContent, {
 import { isV2Only } from "../common/model";
 import IdeaCard from "./IdeaCard";
 import { Idea } from "./model";
+import { SimpleContent } from "./SimpleContent";
 
 interface IdeasDocumentationProps {
   ideas: Idea[];
@@ -83,7 +84,7 @@ const ActiveLevel = ({
           />
         }
       >
-        {activeIdea.content && (
+        {activeIdea.sanityContent && (
           <Stack
             spacing={3}
             fontSize="sm"
@@ -95,7 +96,7 @@ const ActiveLevel = ({
               ...docStyles,
             }}
           >
-            {activeIdea.image && (
+            {/* {activeIdea.image && (
               <Image
                 borderRadius="lg"
                 src={imageUrlBuilder
@@ -108,14 +109,15 @@ const ActiveLevel = ({
                   aspectRatio: getAspectRatio(activeIdea.image.asset._ref),
                 }}
               />
-            )}
+            )} */}
 
             <DocumentationContextProvider
               parentSlug={activeIdea.slug.current}
               toolkitType="ideas"
               title={activeIdea.name}
             >
-              <DocumentationContent content={activeIdea.content} />
+              {/* <DocumentationContent content={activeIdea.sanityContent.content} /> */}
+              <SimpleContent content={activeIdea.simpleContent!} />
             </DocumentationContextProvider>
           </Stack>
         )}
@@ -138,7 +140,7 @@ const ActiveLevel = ({
             key={idea.name}
             name={idea.name}
             isV2Only={isV2Only(idea)}
-            image={idea.image}
+            // image={idea.image}
             onClick={() => onNavigate(idea.slug.current)}
           />
         ))}

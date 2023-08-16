@@ -16,6 +16,14 @@ export type PortableText = Array<
 >;
 
 /**
+ * Wrapper around sanity's content format
+ */
+export interface SanityContent {
+  image: SimpleImage;
+  content?: PortableText;
+}
+
+/**
  * Common image type.
  */
 export interface SimpleImage {
