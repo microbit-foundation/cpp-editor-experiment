@@ -13,7 +13,7 @@ function parseExample(dir) {
 
     //Optional
     try {
-        result.editorjson = fs.readFileSync(path.join(dir, "editor.json"), "utf-8");
+        result.editorjson = JSON.parse(fs.readFileSync(path.join(dir, "editor.json"), "utf-8"));
     } catch {}
 
     return result;
@@ -25,60 +25,39 @@ function writeExamplesJSON(examples) {
             return {
                 _id: example.id,
                 name: example.name,
-                image:{ 
-                    _type: "simpleImage",
-                    alt: "img",
-                    asset: "https://picsum.photos/200/300" //placeholder
+                sanityContent: {
+                    image:{ 
+                        _type: "simpleImage",
+                        alt: "img",
+                        asset: "https://picsum.photos/200/300" //placeholder
+                    },
+                    content: [{
+                        main: example.content.source,
+                        _key: 0,
+                        _type: "cpp"
+                    },{
+                        _type: "block",
+                        _key: 1,
+                        children: [
+                            example.content.readme,
+                        ],
+                        markDefs: [
+                            ""
+                        ],
+                        style: ""
+                    }]
                 },
-                content: [{
-                    main: example.content.source,
-                    _key: 0,
-                    _type: "cpp"
-                },{
-                    _type: "block",
-                    _key: 1,
-                    children: [
-                        example.content.readme,
-                    ],
-                    markDefs: [
-                        ""
-                    ],
-                    style: ""
-                }],
+                simpleContent: {
+                    code: example.content.source,
+                    markdownContent: example.content.readme
+                },
                 language: "en",
                 slug:{
                     _type: "slug",
-                    current: example.name,
+                    current: example.content.editorjson?.slug || example.name,
                 }
             }
         })
-        
-        // [{
-        //     _id:1,
-        //     name:"Blink Display",
-        //     image:{
-        //         _type: "simpleImage",
-        //         alt: "img",
-        //         asset: "https://picsum.photos/200/300"
-        //     },
-        //     content: [{
-        //         _type: "block",
-        //         _key: 0,
-        //         children: [
-        //             "Hello World",
-        //             "This is an auto generated example"
-        //         ],
-        //         markDefs: [
-        //             ""
-        //         ],
-        //         style: ""
-        //     }],
-        //     language:"en",
-        //     slug:{
-        //         "_type":"slug",
-        //         "current":"hi"
-        //     }
-        // }]
     }
     fs.writeFileSync(
         path.join(__dirname, "../public/examples.json"),
