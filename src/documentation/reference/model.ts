@@ -32,7 +32,7 @@ export interface ToolkitTopic extends HasCompatibility {
 }
 
 export interface ToolkitCode {
-  _type: "python";
+  _type: "python" | "cpp";
   main: string;
 }
 
