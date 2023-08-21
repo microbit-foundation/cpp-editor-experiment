@@ -21,7 +21,7 @@ import DocumentationContent, {
 import { isV2Only } from "../common/model";
 import IdeaCard from "./IdeaCard";
 import { Idea } from "./model";
-import { SimpleContent } from "./SimpleContent";
+import { RenderedMarkdownContent } from "./RenderedMarkdownContent";
 
 interface IdeasDocumentationProps {
   ideas: Idea[];
@@ -84,7 +84,7 @@ const ActiveLevel = ({
           />
         }
       >
-        {activeIdea.sanityContent && (
+        {(activeIdea.sanityContent || activeIdea.markdownContent) && (
           <Stack
             spacing={3}
             fontSize="sm"
@@ -117,7 +117,7 @@ const ActiveLevel = ({
               title={activeIdea.name}
             >
               {/* <DocumentationContent content={activeIdea.sanityContent.content} /> */}
-              <SimpleContent content={activeIdea.simpleContent!} />
+              <RenderedMarkdownContent content={activeIdea.markdownContent!} />
             </DocumentationContextProvider>
           </Stack>
         )}

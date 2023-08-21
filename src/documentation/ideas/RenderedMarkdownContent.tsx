@@ -1,23 +1,22 @@
-import { SimpleIdeaContent } from "./model";
 import { Text } from "@chakra-ui/layout";
-
 import MarkdownIt from "markdown-it";
 import parse, {DOMNode, Element, HTMLReactParserOptions, domToReact} from 'html-react-parser';
 
 import { ContextualCodeEmbed } from "../common/DocumentationContent";
 import { Link } from "@chakra-ui/react";
+import { MarkdownContent } from "../common/model";
 
 interface KeywordLinkMap {
     [key: string]: string;
 }
 
-interface SimpleContentProps {
-    content: SimpleIdeaContent,
+interface RenderedMarkdownContentProps {
+    content: MarkdownContent[],
 }
 
-export const SimpleContent = ({
+export const RenderedMarkdownContent = ({
     content
-}: SimpleContentProps) => {
+}: RenderedMarkdownContentProps) => {
     const keywords: KeywordLinkMap = {  //placeholder
         "display":"reference/display", 
         "infinite loop":"reference/loops",
@@ -71,8 +70,13 @@ export const SimpleContent = ({
     
     return (
         <>
-            <ContextualCodeEmbed code={content.code} />
-            {renderContent(content.markdownContent!)}
+            {content.map((content, i)=> {
+                switch(content._type) {
+                    case "block": return <div key={i}>{renderContent(content.content)}</div>;
+                    case "code": return <ContextualCodeEmbed key={i} code={content.content} />;
+                    default: console.warn("No rendering rule for markdown content type " + content._type);
+                }
+            })}
         </>
     );
 }

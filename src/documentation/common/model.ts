@@ -9,6 +9,11 @@ export interface HasCompatibility {
   compatibility: Product[];
 }
 
+export interface MarkdownContent {
+  _type: "block" | "code"
+  content: string,
+}
+
 // Although the data model is more flexible, in the UI we just want to
 // show a V2 marker for newer board features.
 export const isV2Only = (compatible: HasCompatibility) => {

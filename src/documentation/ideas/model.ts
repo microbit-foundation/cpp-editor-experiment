@@ -5,22 +5,13 @@
  */
 
 import { SanityContent, Slug } from "../../common/sanity";
-import { HasCompatibility } from "../common/model";
+import { HasCompatibility, MarkdownContent } from "../common/model";
 
 export interface Idea extends HasCompatibility {
   _id: string;
   name: string;
   sanityContent?: SanityContent;
-  simpleContent?: SimpleIdeaContent,
+  markdownContent?: MarkdownContent[],
   language: string;
   slug: Slug;
-}
-
-/**
- * Wrapper around simple content format, rendering markdown
- */
-export interface SimpleIdeaContent {
-  //image
-  code:string,
-  markdownContent?:string,
 }

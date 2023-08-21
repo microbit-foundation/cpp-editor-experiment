@@ -25,32 +25,7 @@ function writeExamplesJSON(examples) {
             return {
                 _id: example.id,
                 name: example.name,
-                sanityContent: {
-                    image:{ 
-                        _type: "simpleImage",
-                        alt: "img",
-                        asset: "https://picsum.photos/200/300" //placeholder
-                    },
-                    content: [{
-                        main: example.content.source,
-                        _key: 0,
-                        _type: "cpp"
-                    },{
-                        _type: "block",
-                        _key: 1,
-                        children: [
-                            example.content.readme,
-                        ],
-                        markDefs: [
-                            ""
-                        ],
-                        style: ""
-                    }]
-                },
-                simpleContent: {
-                    code: example.content.source,
-                    markdownContent: example.content.readme
-                },
+                markdownContent: [{_type:"code", content:example.content.source}, {_type:"block", content:example.content.readme}],
                 language: "en",
                 slug:{
                     _type: "slug",
