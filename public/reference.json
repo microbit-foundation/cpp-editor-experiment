@@ -1,0 +1,54 @@
+{
+    "result": [{
+        "id": "reference",
+        "name": "reference",
+        "description": "Reference section",
+        "contents": [{
+            "name": "display",
+            "subtitle": "The micro:bit's LED display output",
+            "mdIntroduction": {"_type":"block", "content":"The micro:bit display is a 5x5 LED grid. The output can be controlled with the display class"},
+            "contents":[{
+                "name": "Scroll",
+                "mdContent": [{
+                    "_type":"block",
+                    "content":"You can scroll words and numbers on the micro:bit’s LED display:"
+                }, {
+                    "_type":"code",
+                    "content":"uBit.display.scroll(\"Hello World!\");"
+                }],
+                "mdDetailContent" : [{
+                    "_type":"block",
+                    "content":"This is some dummy extra content that only appears when you click `more`"
+                }],
+                "parent":"",
+                "slug": "scroll"
+            },
+            {
+                "name": "Print",
+                "mdContent": [{
+                    "_type":"block",
+                    "content":"You can print words and numbers on the display one character at a time:"
+                }, {
+                    "_type":"code",
+                    "content":"uBit.display.print(\"ABCDEFG\");"
+                }],
+                "parent":"",
+                "slug": "scroll"
+            },
+            {
+                "name": "Clear",
+                "mdContent": [{
+                    "_type":"block",
+                    "content":"Clear all output from the display, turning all LEDs off:"
+                }, {
+                    "_type":"code",
+                    "content":"uBit.display.clear();"
+                }],
+                "parent":"",
+                "slug": "scroll"
+            }],
+            "slug": "display"
+        }],
+        "language": "en"
+    }]
+}

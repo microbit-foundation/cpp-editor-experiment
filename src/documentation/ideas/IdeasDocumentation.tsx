@@ -21,7 +21,7 @@ import DocumentationContent, {
 import { isV2Only } from "../common/model";
 import IdeaCard from "./IdeaCard";
 import { Idea } from "./model";
-import { RenderedMarkdownContent } from "./RenderedMarkdownContent";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 
 interface IdeasDocumentationProps {
   ideas: Idea[];

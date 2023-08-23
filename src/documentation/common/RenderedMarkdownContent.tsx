@@ -2,9 +2,9 @@ import { Text } from "@chakra-ui/layout";
 import MarkdownIt from "markdown-it";
 import parse, {DOMNode, Element, HTMLReactParserOptions, domToReact} from 'html-react-parser';
 
-import { ContextualCodeEmbed } from "../common/DocumentationContent";
+import { ContextualCodeEmbed } from "./DocumentationContent";
 import { Link } from "@chakra-ui/react";
-import { MarkdownContent } from "../common/model";
+import { MarkdownContent } from "./model";
 
 interface KeywordLinkMap {
     [key: string]: string;

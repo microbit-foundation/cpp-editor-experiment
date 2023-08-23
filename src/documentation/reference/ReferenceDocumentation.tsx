@@ -14,6 +14,7 @@ import DocumentationBreadcrumbHeading from "../common/DocumentationBreadcrumbHea
 import DocumentationContent from "../common/DocumentationContent";
 import DocumentationTopLevelItem from "../common/DocumentationTopLevelItem";
 import { isV2Only } from "../common/model";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import { getTopicAndEntry } from "./content";
 import { Toolkit } from "./model";
 import ReferenceTopicEntry from "./ReferenceTopicEntry";
@@ -31,6 +32,7 @@ interface ReferenceDocumentationProps {
 const ReferenceToolkit = ({ toolkit }: ReferenceDocumentationProps) => {
   const [anchor, setAnchor] = useRouterTabSlug("reference");
   const direction = useAnimationDirection(anchor);
+  console.log(anchor);
   const topicOrEntryId = anchor?.id.split("/")[0];
   const handleNavigate = useCallback(
     (topicOrEntryId: string | undefined) => {
@@ -67,6 +69,7 @@ const ActiveLevel = ({
   toolkit,
   direction,
 }: ActiveLevelProps) => {
+  console.log(topicOrEntryId);
   const [topic, activeItem] = getTopicAndEntry(toolkit, topicOrEntryId);
   const intl = useIntl();
   const referenceString = intl.formatMessage({ id: "reference-tab" });
@@ -87,7 +90,7 @@ const ActiveLevel = ({
           />
         }
       >
-        {topic.introduction && (
+        {topic.mdIntroduction && (
           <Box
             p={5}
             pb={1}
@@ -96,7 +99,8 @@ const ActiveLevel = ({
               ...docStyles,
             }}
           >
-            <DocumentationContent content={topic.introduction} />
+            <RenderedMarkdownContent content={[topic.mdIntroduction!]}/>
+            {/* <DocumentationContent content={topic.introduction} /> */}
           </Box>
         )}
         <List flex="1 1 auto">

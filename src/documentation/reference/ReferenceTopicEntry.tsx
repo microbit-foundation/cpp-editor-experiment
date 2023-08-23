@@ -16,6 +16,7 @@ import DocumentationContent, {
 } from "../common/DocumentationContent";
 import DocumentationHeading from "../common/DocumentationHeading";
 import { isV2Only } from "../common/model";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import ShowMoreButton from "../common/ShowMoreButton";
 import Highlight from "./Highlight";
 import {
@@ -43,7 +44,7 @@ const ReferenceTopicEntry = ({
   entry,
   active,
 }: ToolkitTopicEntryProps) => {
-  const { content, detailContent, alternatives, alternativesLabel } = entry;
+  const { content, detailContent, mdDetailContent, alternatives, alternativesLabel } = entry;
   const activeAlterative = anchor?.id.split("/")[1];
   const [alternativeSlug, setAlternativeSlug] = useState<string | undefined>(
     alternatives && alternatives.length > 0
@@ -68,7 +69,7 @@ const ReferenceTopicEntry = ({
 
   const hasMore =
     hasCode &&
-    (detailContent ||
+    (detailContent || mdDetailContent ||
       contentHasSomeNonCode(content) ||
       (alternatives && contentHasSomeNonCode(activeAlterativeContent)));
 
@@ -118,14 +119,16 @@ const ReferenceTopicEntry = ({
             )}
           </HStack>
 
-          <DocumentationContent
+          <RenderedMarkdownContent content={entry.mdContent!}/>
+
+          {/* <DocumentationContent
             content={content}
             details={
               hasMore
                 ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
                 : DocumentationCollapseMode.ShowAll
             }
-          />
+          /> */}
           {alternatives && typeof alternativeSlug === "string" && (
             <>
               <Flex wrap="wrap" as="label" mt={3}>
@@ -155,10 +158,11 @@ const ReferenceTopicEntry = ({
               />
             </>
           )}
-          <DocumentationContent
+          {/* <DocumentationContent
             details={DocumentationCollapseMode.ExpandCollapseAll}
             content={detailContent}
-          />
+          /> */}
+          {mdDetailContent && <RenderedMarkdownContent content={entry.mdDetailContent!}/>}
         </Box>
       </Highlight>
     </DocumentationContextProvider>

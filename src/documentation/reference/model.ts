@@ -5,7 +5,7 @@
  */
 
 import { PortableText, SimpleImage, Slug } from "../../common/sanity";
-import { HasCompatibility } from "../common/model";
+import { HasCompatibility, MarkdownContent } from "../common/model";
 
 export interface Toolkit {
   id: string;
@@ -26,6 +26,7 @@ export interface ToolkitTopic extends HasCompatibility {
    * Currently migrating to portable text.
    */
   introduction?: PortableText;
+  mdIntroduction?: MarkdownContent;
   contents?: ToolkitTopicEntry[];
   slug: Slug;
   image?: SimpleImage;
@@ -46,10 +47,16 @@ export interface ToolkitTopicEntry extends HasCompatibility {
   name: string;
   // Can be missing for alternatives-only entries.
   content?: PortableText;
+  mdContent?: MarkdownContent[];
+
   // Should be co-present with alternatives.
   alternativesLabel?: string;
   alternatives?: ToolkitAlternative[];
+
   detailContent?: PortableText;
+  mdDetailContent?: MarkdownContent[];
+
+
   parent: ToolkitTopic;
   slug: Slug;
 }

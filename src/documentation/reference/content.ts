@@ -8,7 +8,24 @@ import { Toolkit, ToolkitTopic, ToolkitTopicEntry } from "./model";
 
 export const fetchReferenceToolkit = async (
   languageId: string
-): Promise<Toolkit> => fetchContent(languageId, toolkitQuery, adaptContent);
+): Promise<Toolkit> => {
+  console.log("fetch Toolkit");
+
+  const response = await fetch("reference.json");
+  if (response.ok) {
+    const { result } = await response.json();
+    if (!result) {
+      throw new Error("Unexpected response format");
+    }
+    const content = adaptContent(result);
+
+    if (!content) throw new Error("Result is not a toolkit");
+
+    console.log("Toolkit ok");
+    return content;
+  }
+  throw new Error("Error fetching content: " + response.status);
+}
 
 export const getTopicAndEntry = (
   toolkit: Toolkit,
