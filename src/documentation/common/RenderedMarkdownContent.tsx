@@ -5,6 +5,8 @@ import parse, {DOMNode, Element, HTMLReactParserOptions, domToReact} from 'html-
 import { ContextualCodeEmbed } from "./DocumentationContent";
 import { Link } from "@chakra-ui/react";
 import { MarkdownContent } from "./model";
+import { useRouterState } from "../../router-hooks";
+import { ReactNode } from "react";
 
 interface KeywordLinkMap {
     [key: string]: string;
@@ -14,12 +16,41 @@ interface RenderedMarkdownContentProps {
     content: MarkdownContent[],
 }
 
+interface InternalLinkProps {
+    slug: string,
+    children: ReactNode
+}
+
+const InternalLink = ({slug, children}:InternalLinkProps) => {
+    const [state, setState] = useRouterState();
+    return (
+        <Link
+        color="brand.600"
+        onClick={(e) => {
+            e.preventDefault();
+            setState(
+            {
+                ...state,
+                tab: "reference",
+                slug: {
+                id: slug,
+                },
+            },
+            "documentation-user"
+            );
+        }}
+        >
+        {children}
+        </Link>
+    );
+}
+
 export const RenderedMarkdownContent = ({
     content
 }: RenderedMarkdownContentProps) => {
     const keywords: KeywordLinkMap = {  //placeholder
-        "display":"reference/display", 
-        "infinite loop":"reference/loops",
+        "display":"display", 
+        "infinite loop":"loops",
     };
     
     const addKeywordLinks = (text: string) => {
@@ -30,7 +61,8 @@ export const RenderedMarkdownContent = ({
         const replacedParts = parts.map((part, index) => {
             const href = keywords[part];
             if (!href) return <span key={index}>{part}</span>;
-            return <Link key={index} color="brand.600" href={href}>{part}</Link>
+            // return <Link key={index} color="brand.600" href={href}>{part}</Link>
+            return <InternalLink key={index} slug={href}>{part}</InternalLink>
         });
 
         return replacedParts;
