@@ -21,7 +21,7 @@
                     "content":"This is some dummy extra content that only appears when you click `more`"
                 }],
                 "parent":"",
-                "slug": "scroll"
+                "slug": "display-scroll"
             },
             {
                 "name": "Print",
@@ -33,7 +33,7 @@
                     "content":"uBit.display.print(\"ABCDEFG\");"
                 }],
                 "parent":"",
-                "slug": "scroll"
+                "slug": "display-print"
             },
             {
                 "name": "Clear",
@@ -45,7 +45,7 @@
                     "content":"uBit.display.clear();"
                 }],
                 "parent":"",
-                "slug": "scroll"
+                "slug": "display-clear"
             }],
             "slug": "display"
         }],
