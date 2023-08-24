@@ -21,7 +21,10 @@
                     "content":"This is some dummy extra content that only appears when you click `more`"
                 }],
                 "parent":"",
-                "slug": "display-scroll"
+                "slug": {
+                    "_type": "slug",
+                    "current": "display-scroll"
+                }
             },
             {
                 "name": "Print",
@@ -33,7 +36,10 @@
                     "content":"uBit.display.print(\"ABCDEFG\");"
                 }],
                 "parent":"",
-                "slug": "display-print"
+                "slug": {
+                    "_type": "slug",
+                    "current": "display-print"
+                }
             },
             {
                 "name": "Clear",
@@ -45,10 +51,20 @@
                     "content":"uBit.display.clear();"
                 }],
                 "parent":"",
-                "slug": "display-clear"
+                "slug": {
+                    "_type": "slug",
+                    "current": "display-clear"
+                }
             }],
-            "slug": "display"
+            "slug": {
+                "_type": "slug",
+                "current": "display"
+            }
         }],
-        "language": "en"
+        "language": "en",
+        "slug": {
+            "_type": "slug",
+            "current": "reference"
+        }
     }]
 }

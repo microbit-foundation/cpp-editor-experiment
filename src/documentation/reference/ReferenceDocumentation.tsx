@@ -32,7 +32,6 @@ interface ReferenceDocumentationProps {
 const ReferenceToolkit = ({ toolkit }: ReferenceDocumentationProps) => {
   const [anchor, setAnchor] = useRouterTabSlug("reference");
   const direction = useAnimationDirection(anchor);
-  console.log(anchor);
   const topicOrEntryId = anchor?.id.split("/")[0];
   const handleNavigate = useCallback(
     (topicOrEntryId: string | undefined) => {
@@ -69,7 +68,6 @@ const ActiveLevel = ({
   toolkit,
   direction,
 }: ActiveLevelProps) => {
-  console.log(topicOrEntryId);
   const [topic, activeItem] = getTopicAndEntry(toolkit, topicOrEntryId);
   const intl = useIntl();
   const referenceString = intl.formatMessage({ id: "reference-tab" });
