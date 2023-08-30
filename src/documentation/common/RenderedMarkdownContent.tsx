@@ -12,10 +12,6 @@ interface KeywordLinkMap {
     [key: string]: string;
 }
 
-interface RenderedMarkdownContentProps {
-    content: MarkdownContent[],
-}
-
 interface InternalLinkProps {
     slug: string,
     children: ReactNode
@@ -45,13 +41,29 @@ const InternalLink = ({slug, children}:InternalLinkProps) => {
     );
 }
 
+interface RenderedMarkdownContentProps {
+    content: MarkdownContent[],
+    keywordBlacklist?: string[],
+}
+
+const allKeywords: KeywordLinkMap = {  //placeholder
+    "display":"display", 
+    "infinite loop":"loops-while-true",
+}
+
 export const RenderedMarkdownContent = ({
-    content
+    content,
+    keywordBlacklist
 }: RenderedMarkdownContentProps) => {
-    const keywords: KeywordLinkMap = {  //placeholder
-        "display":"display", 
-        "infinite loop":"loops",
-    };
+    let keywords: KeywordLinkMap = {}
+
+    if (keywordBlacklist) { 
+        for(const keyword in allKeywords) {
+            if(!keywordBlacklist.includes(keyword)) keywords[keyword] = allKeywords[keyword];
+        }
+    } else {
+        keywords = {...allKeywords};
+    }
     
     const addKeywordLinks = (text: string) => {
         const keys = Object.keys(keywords);

@@ -7,6 +7,7 @@
             "name": "display",
             "subtitle": "The micro:bit's LED display output",
             "mdIntroduction": {"_type":"block", "content":"The micro:bit display is a 5x5 LED grid. The output can be controlled with the display class"},
+            "keywordBlacklist": ["display"],
             "contents":[{
                 "name": "Scroll",
                 "mdContent": [{
@@ -59,6 +60,29 @@
             "slug": {
                 "_type": "slug",
                 "current": "display"
+            }
+        }, 
+        {
+            "name": "Loops",
+            "subtitle": "Repeat code with conditions",
+            "contents":[{
+                "name": "While True",
+                "mdContent": [{
+                    "_type":"block",
+                    "content":"Code inside a `while(true)` loop repeats forever!"
+                }, {
+                    "_type":"code",
+                    "content":"while(true) { /* Do something forever */ }"
+                }],
+                "parent":"",
+                "slug": {
+                    "_type": "slug",
+                    "current": "loops-while-true"
+                }
+            }],
+            "slug": {
+                "_type": "slug",
+                "current": "loops"
             }
         }],
         "language": "en",

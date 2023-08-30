@@ -97,7 +97,7 @@ const ActiveLevel = ({
               ...docStyles,
             }}
           >
-            <RenderedMarkdownContent content={[topic.mdIntroduction!]}/>
+            <RenderedMarkdownContent keywordBlacklist={topic.keywordBlacklist} content={[topic.mdIntroduction!]}/>
             {/* <DocumentationContent content={topic.introduction} /> */}
           </Box>
         )}

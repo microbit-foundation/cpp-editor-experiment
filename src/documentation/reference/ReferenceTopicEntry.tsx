@@ -81,6 +81,12 @@ const ReferenceTopicEntry = ({
   );
   const disclosure = useDisclosure();
   const toolkitType = "reference";
+
+  const keywordBlacklist = [
+    ...(entry.keywordBlacklist || []), 
+    ...(entry.parent.keywordBlacklist || []),
+  ]
+
   return (
     <DocumentationContextProvider
       parentSlug={entry.slug.current}
@@ -119,7 +125,10 @@ const ReferenceTopicEntry = ({
             )}
           </HStack>
 
-          <RenderedMarkdownContent content={entry.mdContent!}/>
+          <RenderedMarkdownContent 
+            keywordBlacklist={keywordBlacklist}
+            content={entry.mdContent!}
+          />
 
           {/* <DocumentationContent
             content={content}
@@ -162,7 +171,7 @@ const ReferenceTopicEntry = ({
             details={DocumentationCollapseMode.ExpandCollapseAll}
             content={detailContent}
           /> */}
-          {mdDetailContent && <RenderedMarkdownContent content={entry.mdDetailContent!}/>}
+          {mdDetailContent && <RenderedMarkdownContent keywordBlacklist={keywordBlacklist} content={entry.mdDetailContent!}/>}
         </Box>
       </Highlight>
     </DocumentationContextProvider>

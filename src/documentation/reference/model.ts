@@ -28,6 +28,9 @@ export interface ToolkitTopic extends HasCompatibility {
   introduction?: PortableText;
   mdIntroduction?: MarkdownContent;
   contents?: ToolkitTopicEntry[];
+
+  keywordBlacklist?: string[];
+
   slug: Slug;
   image?: SimpleImage;
 }
@@ -56,6 +59,7 @@ export interface ToolkitTopicEntry extends HasCompatibility {
   detailContent?: PortableText;
   mdDetailContent?: MarkdownContent[];
 
+  keywordBlacklist?: string[];
 
   parent: ToolkitTopic;
   slug: Slug;

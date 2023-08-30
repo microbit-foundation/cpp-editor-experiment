@@ -123,6 +123,8 @@ const requestAPI = async (
     // params?: ApiDocsFunctionParameter[];
   }
 
+  console.log(`[API] MicroBit`);
+
   // hacky for now. Need to wait for LSP to be ready to go before sending this request. Waits 5 seconds
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -159,15 +161,17 @@ const requestAPI = async (
   let children: ApiDocsEntry[] = [];
   // Request docs for each item
   for(let i in items) {
+    const name = items[i].insertText || items[i].label;
+
+    console.log(`[API] MicroBit -> ${name}`)
     const docsInfo : Hover = await requestMemberDocs(client, items[i]);
 
-    const name = items[i].insertText || items[i].label;
 
     children.push({
       id: name,
       name: name,
       fullName: `MicroBit.${name}`,
-      docString: resolveDocsToString(docsInfo.contents),
+      docString: docsInfo.contents ? resolveDocsToString(docsInfo.contents) : "",
       kind: items[i].kind === CompletionItemKind.Method ? "function" : "variable",
     })
   }
@@ -181,6 +185,7 @@ const requestAPI = async (
     },
   });
   
+  console.log(`[API] API Request Complete`)
   return apiDocs;
 }
 
@@ -217,7 +222,6 @@ int main() {
 
 const resolveDocsToString = (docs : any) : string => {
   if (typeof docs === typeof MarkupContent) {
-    console.log("markup")
     const markup: MarkupContent = docs as MarkupContent;
     return markup.value;
   } else {
