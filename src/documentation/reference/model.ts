@@ -42,7 +42,8 @@ export interface ToolkitCode {
 
 interface ToolkitAlternative {
   name: string;
-  content: PortableText;
+  content?: PortableText;
+  mdContent?: MarkdownContent[];
   slug: Slug;
 }
 

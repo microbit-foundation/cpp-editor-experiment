@@ -55,7 +55,7 @@ const ReferenceTopicEntry = ({
   );
   const activeAlterativeContent = alternatives?.find(
     (a) => a.slug.current === alternativeSlug
-  )?.content;
+  )?.mdContent;
 
   useEffect(() => {
     if (activeAlterative && active) {
@@ -161,10 +161,15 @@ const ReferenceTopicEntry = ({
                 </Select>
               </Flex>
 
-              <DocumentationContent
+              {activeAlterativeContent && <RenderedMarkdownContent 
+                keywordBlacklist={keywordBlacklist}
+                content={activeAlterativeContent}
+              />}
+
+              {/* <DocumentationContent
                 details={DocumentationCollapseMode.ExpandCollapseExceptCode}
                 content={activeAlterativeContent}
-              />
+              /> */}
             </>
           )}
           {/* <DocumentationContent

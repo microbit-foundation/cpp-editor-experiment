@@ -156,16 +156,36 @@ const parseTopicMarkdown = (topicMarkdown: string) : ToolkitTopic => {
     topic.contents = entries.map((entry) => {
       const entryParts = entry.split("\n");
       const entryName = entryParts.shift();
+      const entrySlug = `${slug}-${entryName?.toLowerCase().replaceAll(" ", "-")}`;
 
-      // console.log(entryParts);
-      // similar idea to the above where we split based on h4 headings (####) to get each alternative section.
- 
-      const toolkitEntry = { 
+      const toolkitEntry: any = { 
         name: entryName,
-        slug:{ _type:"slug", current:`${slug}-${entryName?.toLowerCase().replaceAll(" ", "-")}`},
-        mdContent: [{_type:"block", content: entryParts.join("\n")}]
+        slug:{ _type:"slug", current:entrySlug},
       }
-    
+
+      // similar idea to the above where we split based on h4 headings (####) to get each alternative section.
+      const alternativesStartIndex = entryParts.findIndex((entryPart) => entryPart.startsWith("#### "));
+      toolkitEntry.mdContent = [
+        {_type:"block", content: alternativesStartIndex === -1 ? entryParts.join("\n") : entryParts.slice(0, alternativesStartIndex - 1).join("\n")}
+      ]
+
+      if (alternativesStartIndex !== -1) {
+        const alternativesParts = entryParts.slice(alternativesStartIndex - 1);
+        toolkitEntry.alternativesLabel = alternativesParts.shift();
+
+        const alternatives = alternativesParts.join("\n").split("####").filter((entry) => entry !== "");
+        toolkitEntry.alternatives = alternatives.map((alternative) => {
+          const altParts = alternative.split("\n");
+          const altName = altParts.shift();
+
+          return {
+            name: altName,
+            mdContent: [{_type:"block", content: altParts.join("\n")}],
+            slug:{ _type:"slug", current:`${entrySlug}-${altName?.toLowerCase().replaceAll(" ", "-")}`},
+          }
+        })
+      }
+        
       return toolkitEntry;
     })
   }
