@@ -18,3 +18,23 @@ Declare a character with the `char` keyword
 ```
 char letter = 'a';
 ```
+
+### Modifying number variables
+Modify the number values of variables using operators:
+
+Select operation:
+#### increment
+Use `+=` to increment the value
+```
+int a = 0;
+a += 10;
+uBit.display.scroll(a);
+```
+
+#### decrement
+Use `-=` to increment the value
+```
+int a = 15;
+a -= 10;
+uBit.display.scroll(a);
+```
