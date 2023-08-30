@@ -100,6 +100,13 @@ export const RenderedMarkdownContent = ({
                     </Text>
                 );
             }
+
+            if (element.name === "pre") {
+                const child = (element.childNodes[0] as Element)
+                if (child.name === "code") {
+                    return <ContextualCodeEmbed code={(child.childNodes[0] as unknown as Text).data} />
+                }
+            }
         
             return element;
         }

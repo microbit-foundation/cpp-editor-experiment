@@ -150,23 +150,20 @@ const parseTopicMarkdown = (topicMarkdown: string) : ToolkitTopic => {
   }
 
   if (firstEntryIndex !== -1) {
-    const entries = parts.slice(firstEntryIndex).join("\n").split("### ").filter((entry) => entry !== "");
+    //this is messy but it has to ensure we split only on ### not #### (regex might do a better a job) 
+    const entries = ("\n" + parts.slice(firstEntryIndex).join("\n")).split("\n### ").filter((entry) => entry !== "");
     
     topic.contents = entries.map((entry) => {
       const entryParts = entry.split("\n");
-      const entryName = entryParts.shift(); 
-      const sections = entryParts.join("\n").split("```");
+      const entryName = entryParts.shift();
 
+      // console.log(entryParts);
+      // similar idea to the above where we split based on h4 headings (####) to get each alternative section.
+ 
       const toolkitEntry = { 
         name: entryName,
         slug:{ _type:"slug", current:`${slug}-${entryName?.toLowerCase().replaceAll(" ", "-")}`},
-        mdContent: [
-          {_type:"block", content: sections[0]},
-          sections.length > 1 && {_type:"code", content: sections[1]},
-        ],
-        mdDetailContent: sections.length > 2 ? [
-          {_type:"block", content: sections[2]},
-        ] : undefined,
+        mdContent: [{_type:"block", content: entryParts.join("\n")}]
       }
     
       return toolkitEntry;
