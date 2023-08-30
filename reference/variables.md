@@ -32,7 +32,7 @@ uBit.display.scroll(a);
 ```
 
 #### decrement
-Use `-=` to increment the value
+Use `-=` to decrement the value
 ```
 int a = 15;
 a -= 10;
