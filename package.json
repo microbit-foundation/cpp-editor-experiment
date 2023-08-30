@@ -99,7 +99,9 @@
     "i18n:compile": "node bin/tidy-lang.js && formatjs compile-folder --ast lang src/messages",
     "i18n:convert": "node bin/tidy-lang.js && node bin/crowdin-convert.js",
     "fix-licensing-headers": "node bin/fix-licensing-headers.js",
-    "reload-examples": "sh bin/update-examples.sh && node bin/parse-examples.js"
+    "reload-examples": "sh bin/update-examples.sh && node bin/parse-examples.js",
+    "reload-reference": "node bin/parse-reference.js",
+    "reload-content": "npm run reload-examples && npm run reload-reference"
   },
   "eslintConfig": {
     "extends": [
