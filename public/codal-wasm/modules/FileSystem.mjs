@@ -82,22 +82,16 @@ export default class FileSystem extends EmProcess {
     async getContent(response, onProgress = (progress)=>{}) {
         const contentLengthHeader = response.headers.get('Content-Length')
         let contentLength = +contentLengthHeader;
+        if (contentLength === 0) contentLength = 27898426;  //hacky fallback to still display some kind of progress to the user even if content-length is missing
 
         const reader = response.body.getReader();
 
-        if(!contentLengthHeader) console.warn("Content Length Header is missing or not yet loaded!\nContent still download, although progress may display incorrectly");
+        if(!contentLengthHeader) console.warn("Content Length Header is missing, using fallback download size (may be inaccurate)");
         console.log(`Download Size: ${contentLength}`);
 
         let receivedLength = 0; // received that many bytes at the moment
         let chunks = []; // array of received binary chunks (comprises the body)
         while(true) {
-            if(contentLength === 0) {
-                //retry get content length
-                console.log("retry get content length")
-                const lengthHeader = response.headers.get('Content-Length')
-                contentLength = +lengthHeader;
-                console.log(`Download Size: ${contentLength}`);
-            }
 
             const {done, value} = await reader.read();
 
@@ -107,7 +101,7 @@ export default class FileSystem extends EmProcess {
 
             chunks.push(value);
             receivedLength += value.length;
-            onProgress(receivedLength / contentLength);
+            onProgress(Math.min(receivedLength / contentLength, 1));
         }
 
         let chunksAll = new Uint8Array(receivedLength);
