@@ -81,7 +81,7 @@ export default class FileSystem extends EmProcess {
     //https://javascript.info/fetch-progress
     async getContent(response, onProgress = (progress)=>{}) {
         const contentLengthHeader = response.headers.get('Content-Length')
-        const contentLength = +contentLengthHeader;
+        let contentLength = +contentLengthHeader;
 
         const reader = response.body.getReader();
 
@@ -91,6 +91,14 @@ export default class FileSystem extends EmProcess {
         let receivedLength = 0; // received that many bytes at the moment
         let chunks = []; // array of received binary chunks (comprises the body)
         while(true) {
+            if(contentLength === 0) {
+                //retry get content length
+                console.log("retry get content length")
+                const lengthHeader = response.headers.get('Content-Length')
+                contentLength = +lengthHeader;
+                console.log(`Download Size: ${contentLength}`);
+            }
+
             const {done, value} = await reader.read();
 
             if (done) {
