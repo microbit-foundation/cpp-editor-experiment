@@ -5,7 +5,7 @@
  */
 import EventEmitter from "events";
 import {
-  ClientCapabilities,
+  // ClientCapabilities,
   CompletionList,
   CompletionParams,
   CompletionRequest,

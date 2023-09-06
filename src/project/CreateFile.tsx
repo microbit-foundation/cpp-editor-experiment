@@ -5,13 +5,12 @@
 */
 
 
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { InputDialogBody } from "../common/InputDialog";
 import { Stack, HStack } from "@chakra-ui/react";
 
 import {
     FormControl,
-    FormHelperText,
     FormLabel,
 } from "@chakra-ui/form-control";
 import { 
@@ -42,14 +41,17 @@ const CreateFileQuestion = ({
     const [filename, setFilename] = useState("");
     const [filetype, setFiletype] = useState("source");
 
-    const fileExts = new Map()
-    fileExts.set('source', '.cpp');
-    fileExts.set('header', '.h');
-
+    const fileExts = useMemo(() => {
+        const fileExts = new Map()
+        fileExts.set('source', '.cpp');
+        fileExts.set('header', '.h');
+        return fileExts;
+    }, [])
+        
     useEffect(() => {
         const combinedValue = filename + fileExts.get(filetype);
         setValue(combinedValue);
-      }, [filename, filetype, setValue]);
+      }, [filename, filetype, setValue, fileExts]);
 
     return (
         <Stack spacing="24px">

@@ -18,14 +18,15 @@ export class ClangdStdio {
         stdout.onPut = (char) => { this.stdoutOnPutHandler(char) };
         
         const stderr = new StdStream();
-        // stderr.onPut = (char) => {
-        //     if (char === "\n") {
-        //         const line = stderr.read();
-        //         if (line.startsWith("E")) console.error(line);
-        //         else console.log(line);
-        //     }
-        // }
-        stderr.onPut = (char) => {}
+        stderr.onPut = (char) => {
+            if (char === "\n") {
+                const line = stderr.read();
+                if (line.startsWith("E")) console.error(line);
+                else if (line.startsWith("clang-tool")) {}
+                else console.log(line);
+            }
+        }
+        // stderr.onPut = (char) => {}
 
         this.module.FS.init(stdin.get, stdout.put, stderr.put);
 

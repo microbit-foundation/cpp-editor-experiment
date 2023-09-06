@@ -54,23 +54,10 @@ export default class FileSystem extends EmProcess {
         })();
     }
 
-    async unpack(...paths) {
+    async unpack(onProgress = (progress)=>{}, ...paths) {
         return Promise.all(paths.flat().map(async (path) => {
-            postMessage({
-                target: "worker",
-                type: "info",
-                body: "Downloading root",
-            })
-
-
-            let file = await fetch(path);
-            let buffer = new Uint8Array(await file.arrayBuffer());
-
-            postMessage({
-                target: "worker",
-                type: "info",
-                body: "Unpacking",
-            })
+            const response = await fetch(path);
+            const buffer = await this.getContent(response, onProgress);
 
             if (path.endsWith(".br")) {
                 // it's a brotli file, decompress it
@@ -87,8 +74,45 @@ export default class FileSystem extends EmProcess {
             await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
             await this.FS.unlink("/tmp/archive.pack");
             
-            //Brotli isnt used after this.S
+            //Brotli isnt used after this.
         }));
+    }
+
+    //https://javascript.info/fetch-progress
+    async getContent(response, onProgress = (progress)=>{}) {
+        const contentLengthHeader = response.headers.get('Content-Length')
+        let contentLength = +contentLengthHeader;
+        if (contentLength === 0) contentLength = 27898426;  //hacky fallback to still display some kind of progress to the user even if content-length is missing
+
+        const reader = response.body.getReader();
+
+        if(!contentLengthHeader) console.warn("Content Length Header is missing, using fallback download size (may be inaccurate)");
+        console.log(`Download Size: ${contentLength}`);
+
+        let receivedLength = 0; // received that many bytes at the moment
+        let chunks = []; // array of received binary chunks (comprises the body)
+        while(true) {
+
+            const {done, value} = await reader.read();
+
+            if (done) {
+                break;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+            onProgress(Math.min(receivedLength / contentLength, 1));
+        }
+
+        let chunksAll = new Uint8Array(receivedLength);
+        let position = 0;
+
+        for(let chunk of chunks) {
+            chunksAll.set(chunk, position);
+            position += chunk.length;
+        }
+
+        return chunksAll
     }
 
     async cachedLazyFile(path, size, md5, url) {
