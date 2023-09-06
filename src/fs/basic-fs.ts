@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import sortBy from "lodash.sortby";
-import { toByteArray } from "base64-js";
+import { fromByteArray, toByteArray } from "base64-js";
 
 import {
     FileSystem,
@@ -62,14 +62,45 @@ export class BasicFileSystem extends EventEmitter implements FileSystem {
         }
     }
 
-    getProjectFiles(): Promise<ProjectFiles> {
-        throw new Error("Method not implemented.");
+    async getProjectFiles(): Promise<ProjectFiles> {
+        const projectName = await this.storage.projectName();
+        const project: ProjectFiles = {
+        files: {},
+        projectName,
+        };
+
+        for (const file of await this.storage.ls()) {
+        const data = await this.storage.read(file);
+        const contentAsBase64 = fromByteArray(data);
+         project.files[file] = contentAsBase64;
+        }
+        return project;
     }
-    replaceWithProjectFiles(project: ProjectFiles): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async replaceWithProjectFiles(project: ProjectFiles): Promise<void> {
+        this.project.files.forEach((f) => this.remove(f.name));
+        
+        for (const key in project.files) {
+            const content = toByteArray(project.files[key]);
+            await this.write(key, content, VersionAction.INCREMENT);
+        }
+
+        await this.replaceCommon(project.projectName);
     }
+
+    //might not be used for now since we don't load cpp projects from hex
     replaceWithHexContents(projectName: string, hex: string): Promise<void> {
         throw new Error("Method not implemented.");
+    }
+
+    private async replaceCommon(projectName?: string): Promise<void> {
+        this.project = {
+          ...this.project,
+          id: generateId(),
+        };
+        await this.storage.setProjectName(projectName);
+        await this.clearDirty();
+        return this.notify();
     }
 
     get dirty() {
