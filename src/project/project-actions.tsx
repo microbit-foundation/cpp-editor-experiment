@@ -68,6 +68,8 @@ import { DefaultedProject } from "./project-hooks";
 import {
   ensureCppExtension,
   ensurePythonExtension,
+  isCppFile,
+  isHeaderFile,
   isPythonFile,
   validateNewFilename,
 } from "./project-utils";
@@ -283,89 +285,30 @@ export class ProjectActions {
     const extensions = new Set(
       files.map((f) => getLowercaseFileExtension(f.name))
     );
-    if (extensions.has("mpy")) {
+
+    if (!extensions.has("cpp")) {
       this.actionFeedback.expectedError({
         title: errorTitle,
-        description: this.intl.formatMessage({ id: "load-error-mpy" }),
+        description: "Selected file(s) do not include any C++ source files. Make sure you select at least one file ending in .cpp", //TODO: use this.intl.formatMessage
       });
-    } else if (extensions.has("hex")) {
-      if (files.length > 1) {
-        this.actionFeedback.expectedError({
-          title: errorTitle,
-          description: this.intl.formatMessage({ id: "load-error-mixed" }),
-        });
-      } else {
-        if (await this.confirmReplace()) {
-          const file = files[0];
-          const projectName = file.name.replace(/\.hex$/i, "");
-          const hex = await readFileAsText(file);
-          try {
-            await this.fs.replaceWithHexContents(projectName, hex);
-            this.actionFeedback.success({
-              title: this.intl.formatMessage(
-                { id: "loaded-file-feedback" },
-                { filename: file.name }
-              ),
-            });
-          } catch (e: any) {
-            const isMakeCodeHex = isMakeCodeForV1Hex(hex);
-            // Ideally we'd make FormattedMessage work in toasts, but it does not so using intl.
-            this.actionFeedback.expectedError({
-              title: errorTitle,
-              description: isMakeCodeHex ? (
-                <Stack spacing={0.5}>
-                  <Text>
-                    {this.intl.formatMessage({
-                      id: "load-error-makecode-info",
-                    })}
-                  </Text>
-                  <Text>
-                    {this.intl.formatMessage(
-                      { id: "load-error-makecode-link" },
-                      {
-                        link: (chunks: ReactNode) => (
-                          <Link
-                            target="_blank"
-                            rel="noopener"
-                            href="https://makecode.microbit.org/"
-                          >
-                            {chunks}
-                          </Link>
-                        ),
-                      }
-                    )}
-                  </Text>
-                </Stack>
-              ) : (
-                e.message
-              ),
-              error: e,
-            });
-          }
-        }
-      }
     } else {
-      const classifiedInputs: ClassifiedFileInput[] = [];
-      const hasMainPyFile = files.some((x) => x.name === MAIN_FILE);
-      for (const f of files) {
+      const fileInputs : FileInput[] = [];
+      for(const f of files) {
         const content = await readFileAsUint8Array(f);
-        const python = isPythonFile(f.name);
-        const module = python && isPythonMicrobitModule(content);
-        const script = hasMainPyFile ? f.name === MAIN_FILE : python && !module;
-        classifiedInputs.push({
+        const cppOrH = isCppFile(f.name) || isHeaderFile(f.name);
+        if (!cppOrH) continue; //discard any none cpp or header files
+
+        fileInputs.push({
           name: f.name,
-          script,
-          module,
           data: () => Promise.resolve(content),
-        });
+        })
       }
 
-      const inputs = await this.chooseScriptForMain(classifiedInputs);
-      if (inputs) {
-        return this.uploadInternal(inputs);
+      if (fileInputs) {
+        return this.uploadInternal(fileInputs);
       }
-    }
-  };
+    };
+  }
 
   /**
    * Open a project, asking for confirmation if required.
@@ -424,7 +367,7 @@ export class ProjectActions {
     }
   };
 
-  private async uploadInternal(inputs: ClassifiedFileInput[]) {
+  private async uploadInternal(inputs: FileInput[]) {
     const changes = this.findChanges(inputs);
     try {
       for (const change of changes) {
