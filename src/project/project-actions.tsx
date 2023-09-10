@@ -7,6 +7,7 @@ import { Link, List, ListItem, Stack } from "@chakra-ui/layout";
 import { Text, VStack } from "@chakra-ui/react";
 import { isMakeCodeForV1Hex as isMakeCodeForV1HexNoErrorHandling } from "@microbit/microbit-universal-hex";
 import { saveAs } from "file-saver";
+import JSZip from "jszip";
 import { ReactNode } from "react";
 import { FormattedMessage, IntlShape } from "react-intl";
 import { ConfirmDialog } from "../common/ConfirmDialog";
@@ -545,6 +546,34 @@ export class ProjectActions {
         type: "application/octet-stream",
       });
       saveAs(blob, filename);
+    } catch (e: any) {
+      this.actionFeedback.unexpectedError(e);
+    }
+  };
+
+ 
+  saveProjectFiles = async () => {
+    this.logging.event({
+      type: "save-project-files",
+    });
+
+    try {
+      const files: Record<string, Uint8Array> = await this.fs.files();
+      const zipName = (this.fs.project.name || "untitled project").replace(" ", "_");
+      const zip = new JSZip();
+
+      for(const filename in files) {
+        const blob = new Blob([files[filename]], {
+          type: "application/octet-stream",
+        });
+        zip.file(filename, blob);
+      }
+
+      zip.generateAsync({ type: 'blob' }).then(function (content) {
+        saveAs(content, zipName + ".zip");
+      });
+      
+
     } catch (e: any) {
       this.actionFeedback.unexpectedError(e);
     }

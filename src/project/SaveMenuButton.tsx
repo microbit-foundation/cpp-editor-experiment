@@ -53,6 +53,13 @@ const SaveMenuButton = ({ size }: SaveMenuButtonProps) => {
               >
                 <FormattedMessage id="save-python-action" />
               </MenuItem>
+
+              <MenuItem
+                icon={<RiDownload2Line />}
+                onClick={() => actions.saveProjectFiles()}
+              >
+                <FormattedMessage id="save-project-files-action" />
+              </MenuItem>
             </MenuList>
           </Portal>
         </ButtonGroup>
