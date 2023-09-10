@@ -1,4 +1,3 @@
-import { baseUrl } from "../base";
 
 export interface Compiler {
     compile(files : Record<string, Uint8Array>) : Promise<void>

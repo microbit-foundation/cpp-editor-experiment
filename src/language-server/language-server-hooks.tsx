@@ -18,7 +18,6 @@ import {
   removeTrackFsChangesListener,
   trackFsChanges,
 } from "./client-fs";
-// import { pyright } from "./pyright";
 import { clang } from "../clang/clang";
 
 const LanguageServerClientContext = createContext<
@@ -47,14 +46,6 @@ export const LanguageServerClientProvider = ({
     let listener: FsChangesListener | undefined;
     client?.initialize().then(() => {
       listener = trackFsChanges(client, fs);
-
-      client.didOpenTextDocument( {
-        textDocument: {
-          languageId: "c++",
-          text: "int main() { return 0; }",
-          uri: "file:///src/main.cpp",
-        },
-      });
     });
     return () => {
       if (listener) {

@@ -1,4 +1,5 @@
-# micro:bit Python Editor V3
+# micro:bit C++ Editor
+[![Netlify Status](https://api.netlify.com/api/v1/badges/d580cf5f-5420-4777-a663-c3233384be52/deploy-status)](https://app.netlify.com/sites/flourishing-taiyaki-76adeb/deploys)
 
 This project is a web-based code editor that targets the [MicroPython](https://micropython.org) version of the [Python programming language](http://python.org/).
 

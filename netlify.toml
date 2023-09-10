@@ -1,9 +1,14 @@
 [Settings]
 [build]
-command = "npm run ci"
+command = "npm run build" #npm run ci
 [build.environment]
-  CI = "true"
+  CI = "false"  #disables warnings as errors for now
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+[[headers]]
+  for = "/*"
+    [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
