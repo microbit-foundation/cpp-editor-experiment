@@ -5,7 +5,7 @@ import { CODALCompiler } from "./compile";
 
 let clangObj : Clang;
 
-interface Clang {
+export interface Clang {
     worker : Worker,
     compiler: CODALCompiler,
     clangd: Clangd,

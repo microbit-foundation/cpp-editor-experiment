@@ -12,7 +12,7 @@ import { MAIN_FILE } from "./fs";
  * Handling is in place for backwards compatibility for V2 projects
  * where only the main file content is initialized as a string.
  */
-export interface PythonProject {
+export interface ProjectFiles {
   // File content as base64.
   files: Record<string, string>;
   projectName?: string;
@@ -42,7 +42,7 @@ int main() {
 }
 `;
 
-export const defaultInitialProject: PythonProject = {
+export const defaultInitialProject: ProjectFiles = {
   files: projectFilesToBase64({
     [MAIN_FILE]: defaultMainFileContent,
   }),

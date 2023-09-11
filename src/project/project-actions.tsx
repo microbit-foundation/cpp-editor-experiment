@@ -7,6 +7,7 @@ import { Link, List, ListItem, Stack } from "@chakra-ui/layout";
 import { Text, VStack } from "@chakra-ui/react";
 import { isMakeCodeForV1Hex as isMakeCodeForV1HexNoErrorHandling } from "@microbit/microbit-universal-hex";
 import { saveAs } from "file-saver";
+import JSZip from "jszip";
 import { ReactNode } from "react";
 import { FormattedMessage, IntlShape } from "react-intl";
 import { ConfirmDialog } from "../common/ConfirmDialog";
@@ -34,10 +35,11 @@ import {
   readFileAsText,
   readFileAsUint8Array,
 } from "../fs/fs-util";
+import { HexGenerator } from "../fs/hex-gen";
 import {
   defaultInitialProject,
   projectFilesToBase64,
-  PythonProject,
+  ProjectFiles,
 } from "../fs/initial-project";
 import { LanguageServerClient } from "../language-server/client";
 import { Logging } from "../logging/logging";
@@ -65,6 +67,10 @@ import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
 import CreateFileQuestion from "./CreateFile";
 import { DefaultedProject } from "./project-hooks";
 import {
+  ensureCppExtension,
+  ensurePythonExtension,
+  isCppFile,
+  isHeaderFile,
   isPythonFile,
   validateNewFilename,
 } from "./project-utils";
@@ -95,6 +101,7 @@ interface ProjectStatistics extends Statistics {
 export class ProjectActions {
   constructor(
     private fs: FileSystem,
+    private hexGen: HexGenerator,
     private device: DeviceConnection,
     private actionFeedback: ActionFeedback,
     private dialogs: Dialogs,
@@ -279,89 +286,30 @@ export class ProjectActions {
     const extensions = new Set(
       files.map((f) => getLowercaseFileExtension(f.name))
     );
-    if (extensions.has("mpy")) {
+
+    if (!extensions.has("cpp")) {
       this.actionFeedback.expectedError({
         title: errorTitle,
-        description: this.intl.formatMessage({ id: "load-error-mpy" }),
+        description: "Selected file(s) do not include any C++ source files. Make sure you select at least one file ending in .cpp", //TODO: use this.intl.formatMessage
       });
-    } else if (extensions.has("hex")) {
-      if (files.length > 1) {
-        this.actionFeedback.expectedError({
-          title: errorTitle,
-          description: this.intl.formatMessage({ id: "load-error-mixed" }),
-        });
-      } else {
-        if (await this.confirmReplace()) {
-          const file = files[0];
-          const projectName = file.name.replace(/\.hex$/i, "");
-          const hex = await readFileAsText(file);
-          try {
-            await this.fs.replaceWithHexContents(projectName, hex);
-            this.actionFeedback.success({
-              title: this.intl.formatMessage(
-                { id: "loaded-file-feedback" },
-                { filename: file.name }
-              ),
-            });
-          } catch (e: any) {
-            const isMakeCodeHex = isMakeCodeForV1Hex(hex);
-            // Ideally we'd make FormattedMessage work in toasts, but it does not so using intl.
-            this.actionFeedback.expectedError({
-              title: errorTitle,
-              description: isMakeCodeHex ? (
-                <Stack spacing={0.5}>
-                  <Text>
-                    {this.intl.formatMessage({
-                      id: "load-error-makecode-info",
-                    })}
-                  </Text>
-                  <Text>
-                    {this.intl.formatMessage(
-                      { id: "load-error-makecode-link" },
-                      {
-                        link: (chunks: ReactNode) => (
-                          <Link
-                            target="_blank"
-                            rel="noopener"
-                            href="https://makecode.microbit.org/"
-                          >
-                            {chunks}
-                          </Link>
-                        ),
-                      }
-                    )}
-                  </Text>
-                </Stack>
-              ) : (
-                e.message
-              ),
-              error: e,
-            });
-          }
-        }
-      }
     } else {
-      const classifiedInputs: ClassifiedFileInput[] = [];
-      const hasMainPyFile = files.some((x) => x.name === MAIN_FILE);
-      for (const f of files) {
+      const fileInputs : FileInput[] = [];
+      for(const f of files) {
         const content = await readFileAsUint8Array(f);
-        const python = isPythonFile(f.name);
-        const module = python && isPythonMicrobitModule(content);
-        const script = hasMainPyFile ? f.name === MAIN_FILE : python && !module;
-        classifiedInputs.push({
+        const cppOrH = isCppFile(f.name) || isHeaderFile(f.name);
+        if (!cppOrH) continue; //discard any none cpp or header files
+
+        fileInputs.push({
           name: f.name,
-          script,
-          module,
           data: () => Promise.resolve(content),
-        });
+        })
       }
 
-      const inputs = await this.chooseScriptForMain(classifiedInputs);
-      if (inputs) {
-        return this.uploadInternal(inputs);
+      if (fileInputs) {
+        return this.uploadInternal(fileInputs);
       }
-    }
-  };
+    };
+  }
 
   /**
    * Open a project, asking for confirmation if required.
@@ -371,12 +319,12 @@ export class ProjectActions {
    * @returns True if we opened the project, false if the user cancelled.
    */
   private openProject = async (
-    project: PythonProject,
+    project: ProjectFiles,
     confirmPrompt?: string
   ): Promise<boolean> => {
     const confirmed = await this.confirmReplace(confirmPrompt);
     if (confirmed) {
-      await this.fs.replaceWithMultipleFiles(project);
+      await this.fs.replaceWithProjectFiles(project);
     }
     return confirmed;
   };
@@ -386,7 +334,7 @@ export class ProjectActions {
       type: "idea-open",
       message: slug,
     });
-    const pythonProject: PythonProject = {
+    const pythonProject: ProjectFiles = {
       files: projectFilesToBase64({
         [MAIN_FILE]: code,
       }),
@@ -420,7 +368,7 @@ export class ProjectActions {
     }
   };
 
-  private async uploadInternal(inputs: ClassifiedFileInput[]) {
+  private async uploadInternal(inputs: FileInput[]) {
     const changes = this.findChanges(inputs);
     try {
       for (const change of changes) {
@@ -529,7 +477,7 @@ export class ProjectActions {
           progress: value,
         });
       };
-      await this.device.flash(this.fs, { partial: true, progress });
+      await this.device.flash(this.hexGen, { partial: true, progress });
     } catch (e) {
       if (e instanceof HexGenerationError) {
         this.actionFeedback.expectedError({
@@ -561,7 +509,7 @@ export class ProjectActions {
 
     let download: string | undefined;
     try {
-      download = await this.fs.toHexForSave();
+      download = await this.hexGen.toHexForSave();
     } catch (e: any) {
       this.actionFeedback.expectedError({
         title: this.intl.formatMessage({ id: "failed-to-build-hex" }),
@@ -598,6 +546,34 @@ export class ProjectActions {
         type: "application/octet-stream",
       });
       saveAs(blob, filename);
+    } catch (e: any) {
+      this.actionFeedback.unexpectedError(e);
+    }
+  };
+
+ 
+  saveProjectFiles = async () => {
+    this.logging.event({
+      type: "save-project-files",
+    });
+
+    try {
+      const files: Record<string, Uint8Array> = await this.fs.files();
+      const zipName = (this.fs.project.name || "untitled project").replace(" ", "_");
+      const zip = new JSZip();
+
+      for(const filename in files) {
+        const blob = new Blob([files[filename]], {
+          type: "application/octet-stream",
+        });
+        zip.file(filename, blob);
+      }
+
+      zip.generateAsync({ type: 'blob' }).then(function (content) {
+        saveAs(content, zipName + ".zip");
+      });
+      
+
     } catch (e: any) {
       this.actionFeedback.unexpectedError(e);
     }

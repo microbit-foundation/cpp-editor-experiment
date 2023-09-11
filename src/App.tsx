@@ -16,7 +16,7 @@ import { MockDeviceConnection } from "./device/mock";
 import DocumentationProvider from "./documentation/documentation-hooks";
 import SearchProvider from "./documentation/search/search-hooks";
 import { ActiveEditorProvider } from "./editor/active-editor-hooks";
-import { FileSystem } from "./fs/fs";
+import { _FileSystem } from "./fs/fs";
 import { FileSystemProvider } from "./fs/fs-hooks";
 import { createHost } from "./fs/host";
 import { fetchMicroPython } from "./micropython/micropython";
@@ -30,6 +30,9 @@ import SettingsProvider from "./settings/settings";
 import BeforeUnloadDirtyCheck from "./workbench/BeforeUnloadDirtyCheck";
 import { SelectionProvider } from "./workbench/use-selection";
 import Workbench from "./workbench/Workbench";
+import { ClangHexGenerator } from "./fs/hex-gen";
+import { HexGenProvider } from "./fs/hex-hooks";
+import { BasicFileSystem } from "./fs/basic-fs";
 
 const isMockDeviceMode = () =>
   // We use a cookie set from the e2e tests. Avoids having separate test and live builds.
@@ -43,10 +46,14 @@ const device = isMockDeviceMode()
   : new MicrobitWebUSBConnection({ logging });
 
 const host = createHost(logging);
-const fs = new FileSystem(logging, host, fetchMicroPython);
+// const fs = new _FileSystem(logging, host, fetchMicroPython);
+const bfs = new BasicFileSystem(logging, host);
+const hexGenerator = new ClangHexGenerator(bfs);
 
 // If this fails then we retry on access.
-fs.initializeInBackground();
+// fs.initializeInBackground();
+bfs.initialize(); //should be able to get away with just letting this run since clang also has to initialise, which takes significantly longer
+
 
 const App = () => {
   useEffect(() => {
@@ -70,27 +77,29 @@ const App = () => {
           <SettingsProvider>
             <SessionSettingsProvider>
               <TranslationProvider>
-                <FileSystemProvider value={fs}>
-                  <DeviceContextProvider value={device}>
-                    <LanguageServerClientProvider>
-                      <BeforeUnloadDirtyCheck />
-                      <DocumentationProvider>
-                        <SearchProvider>
-                          <SelectionProvider>
-                            <DialogProvider>
-                              <RouterProvider>
-                                <ProjectDropTarget>
-                                  <ActiveEditorProvider>
-                                    <Workbench />
-                                  </ActiveEditorProvider>
-                                </ProjectDropTarget>
-                              </RouterProvider>
-                            </DialogProvider>
-                          </SelectionProvider>
-                        </SearchProvider>
-                      </DocumentationProvider>
-                    </LanguageServerClientProvider>
-                  </DeviceContextProvider>
+                <FileSystemProvider value={bfs}>
+                  <HexGenProvider value={hexGenerator}>
+                    <DeviceContextProvider value={device}>
+                      <LanguageServerClientProvider>
+                        <BeforeUnloadDirtyCheck />
+                        <DocumentationProvider>
+                          <SearchProvider>
+                            <SelectionProvider>
+                              <DialogProvider>
+                                <RouterProvider>
+                                  <ProjectDropTarget>
+                                    <ActiveEditorProvider>
+                                      <Workbench />
+                                    </ActiveEditorProvider>
+                                  </ProjectDropTarget>
+                                </RouterProvider>
+                              </DialogProvider>
+                            </SelectionProvider>
+                          </SearchProvider>
+                        </DocumentationProvider>
+                      </LanguageServerClientProvider>
+                    </DeviceContextProvider>
+                  </HexGenProvider>
                 </FileSystemProvider>
               </TranslationProvider>
             </SessionSettingsProvider>

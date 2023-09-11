@@ -19,6 +19,7 @@ import {
 } from "../device/device-hooks";
 import { EVENT_REQUEST_FLASH } from "../device/simulator";
 import { useFileSystem } from "../fs/fs-hooks";
+import { useHexGeneration } from "../fs/hex-hooks";
 import { useLogging } from "../logging/logging-hooks";
 import { RunningStatus } from "./Simulator";
 
@@ -33,18 +34,18 @@ const SimulatorActionBar = ({
   ...props
 }: SimulatorActionBarProps) => {
   const device = useSimulator();
-  const fs = useFileSystem();
+  const hexGen = useHexGeneration();
   const intl = useIntl();
   const logging = useLogging();
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const syncStatus = useSyncStatus();
   const handlePlay = useCallback(async () => {
-    device.flash(fs, {
+    device.flash(hexGen, {
       partial: true,
       progress: () => {},
     });
     onRunningChange(RunningStatus.RUNNING);
-  }, [device, fs, onRunningChange]);
+  }, [device, hexGen, onRunningChange]);
   const handleStop = useCallback(
     (source: "user" | "code") => {
       device.stop();

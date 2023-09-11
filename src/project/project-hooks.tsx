@@ -16,6 +16,7 @@ import {
   isPythonMicrobitModule,
   ModuleData,
 } from "../fs/fs-util";
+import { useHexGeneration } from "../fs/hex-hooks";
 import { useLanguageServerClient } from "../language-server/language-server-hooks";
 import { useLogging } from "../logging/logging-hooks";
 import { useSessionSettings } from "../settings/session-settings";
@@ -28,6 +29,7 @@ import { defaultedProject, ProjectActions } from "./project-actions";
  */
 export const useProjectActions = (): ProjectActions => {
   const fs = useFileSystem();
+  const hexGen = useHexGeneration();
   const actionFeedback = useActionFeedback();
   const device = useDevice();
   const dialogs = useDialogs();
@@ -41,6 +43,7 @@ export const useProjectActions = (): ProjectActions => {
     () =>
       new ProjectActions(
         fs,
+        hexGen,
         device,
         actionFeedback,
         dialogs,
