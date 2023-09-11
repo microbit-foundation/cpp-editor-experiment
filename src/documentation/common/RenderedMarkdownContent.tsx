@@ -57,12 +57,7 @@ export const RenderedMarkdownContent = ({
     keywordBlacklist,
     collapseMode = DocumentationCollapseMode.ShowAll,
 }: RenderedMarkdownContentProps) => {
-    const collapseNode = 
-        collapseMode === DocumentationCollapseMode.ExpandCollapseExceptCode ||
-        collapseMode === DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine;
-    
-    //initialise this to true if we are keeping the first line
-    let isFirstLine = collapseMode === DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine;
+    const collapseNode = collapseMode !== DocumentationCollapseMode.ShowAll
 
     let keywords: KeywordLinkMap = {}
     if (keywordBlacklist) { 
@@ -86,43 +81,6 @@ export const RenderedMarkdownContent = ({
 
         return replacedParts;
     }
-
-    const elementIsCode = (element: Element) => {
-        if(!element) return false;
-        if (element.name === "pre") {
-            const child = (element.childNodes[0] as Element)
-            return child.name === "code"
-        }
-
-        return false;
-    }  
-
-    const replaceNode = (node: DOMNode): JSX.Element => {
-        const element = node as Element;
-        if (element) {
-            if (/^h\d/.test(element.name)) {
-                //h1 should not be used as this would represent a section header
-                if (element.name === "h1") return (<></>);
-
-                // For the moment we only support displaying as a h3.
-                return (
-                    <Text fontSize="lg" fontWeight="semibold">
-                        {domToReact(element.children)}
-                    </Text>
-                );
-            }
-
-            if (element.name === "pre") {
-                const child = (element.childNodes[0] as Element)
-                if (child.name === "code") {
-                    return <ContextualCodeEmbed code={(child.childNodes[0] as unknown as Text).data} />
-                }
-            }
-        }
-
-        //nothing to replace, but we still want to convert the DOMNode to react JSX.Element 
-        return <>{domToReact([node])}</>;
-    }
      
     const parseOptions: HTMLReactParserOptions = {
         replace: (node: DOMNode) => {
@@ -130,17 +88,29 @@ export const RenderedMarkdownContent = ({
                 return <>{addKeywordLinks((node as unknown as Text).data)}</>
             }
 
-            const jsx = replaceNode(node);
-            const isLine = true; //might not be necessary, but unsure whether all elements will be lines (i.e. some may be structural elements)
-            const isCode = elementIsCode(node as Element)
+            const element = node as Element;
+            if (element) {
+                if (/^h\d/.test(element.name)) {
+                    //h1 should not be used as this would represent a section header
+                    if (element.name === "h1") return (<></>);
 
-            const collapseToFirstLine = isFirstLine && isLine;
-            if (isLine) isFirstLine = false;
-            return wrapWithCollapseNode(
-                collapseNode && !isCode,
-                collapseToFirstLine,
-                jsx,
-            )
+                    // For the moment we only support displaying as a h3.
+                    return (
+                        <Text fontSize="lg" fontWeight="semibold">
+                            {domToReact(element.children)}
+                        </Text>
+                    );
+                }
+
+                if (element.name === "pre") {
+                    const child = (element.childNodes[0] as Element)
+                    if (child.name === "code") {
+                        return <ContextualCodeEmbed code={(child.childNodes[0] as unknown as Text).data} />
+                    }
+                }
+            }
+
+            return node;
         }
     }
 
@@ -151,21 +121,62 @@ export const RenderedMarkdownContent = ({
         return parse(html, parseOptions);
     }
 
-    const wrapWithCollapseNode = (condition: boolean, firstLine: boolean, node: JSX.Element): JSX.Element => {
-        return condition
-            ? <ContextualCollapseReactNode collapseToFirstLine={firstLine}>{node}</ContextualCollapseReactNode>
-            : node
-    }
+    const renderContentWithCollapses = (markdown:string) => {
+        if (collapseMode === DocumentationCollapseMode.ExpandCollapseAll) return 
+            <ContextualCollapseReactNode collapseToFirstLine={false}>
+                {renderContent(markdown)}
+            </ContextualCollapseReactNode>
+        
+        //otherwise split into blocks to wrap with collapses at appropriate points 
+        const codeBlockRegex = /(```)/g;
+        const blocks = markdown.split(codeBlockRegex) || [];
+        const nonEmptyBlocks = blocks.filter(block => block.trim() !== '');
+        const isCodeFirst = markdown.startsWith('```')
+
+        const finalBlocks: string[] = []
+        let collectCode = isCodeFirst;
+        for(let i=0; i<nonEmptyBlocks.length; i++) {
+            if (collectCode) {
+                finalBlocks.push(nonEmptyBlocks.slice(i, i+3).join(""));
+                i+=2;
+            }
+            else finalBlocks.push(nonEmptyBlocks[i])
+            collectCode = !collectCode;
+        }
+    
+        let isFirstLine = true;
+        let isCode = !isCodeFirst;
+        return finalBlocks.map((block, i) => { 
+            isCode = !isCode;
+            const rendered = renderContent(block);
+
+            if (isCode) return <div key={i}>{rendered}</div>;
+
+            const collapseToFirstLine = 
+                isFirstLine && 
+                collapseMode === DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine;
+            isFirstLine = false;
+
+            return ( 
+            <ContextualCollapseReactNode 
+                key={i}
+                collapseToFirstLine={collapseToFirstLine}
+            >
+                {rendered}
+            </ContextualCollapseReactNode>)
+        })
+    } 
+
 
     const contentNode = 
         <Stack spacing={3} mt={3}>
             {content.map((content, i) => {
             switch(content._type) {
                 case "block": 
-                    const blockNode = <div key={i}>{renderContent(content.content)}</div>;
-                    return collapseMode === DocumentationCollapseMode.ExpandCollapseAll
-                        ?  <ContextualCollapseReactNode key={i} collapseToFirstLine={false}>{blockNode}</ContextualCollapseReactNode>
-                        : blockNode;
+                    return <div key={i}>{collapseNode
+                        ? renderContentWithCollapses(content.content)
+                        : renderContent(content.content)
+                    }</div>;
                 case "code":
                     return <ContextualCodeEmbed key={i} code={content.content} />;
                 default: console.warn("No rendering rule for markdown content type " + content._type);
