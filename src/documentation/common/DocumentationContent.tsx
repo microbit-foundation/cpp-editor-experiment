@@ -142,11 +142,11 @@ interface SerializerMarkProps<T> extends HasChildren {
   mark: T;
 }
 
-export const ContextualCollapse = ({
+export const ContextualCollapseReactNode = ({
   children,
   collapseToFirstLine,
 }: {
-  children: PortableText;
+  children: ReactNode;
   collapseToFirstLine: boolean;
 }) => {
   const isExpanded = useIsExpanded();
@@ -157,11 +157,23 @@ export const ContextualCollapse = ({
       startingHeight={collapseToFirstLine ? "1.9725rem" : undefined}
     >
       <Stack spacing={3} pt={3} noOfLines={justFirstLine ? 1 : undefined}>
-        <BlockContent blocks={children} serializers={serializers} />
+        {children}
       </Stack>
     </Collapse>
   );
 };
+
+export const ContextualCollapse = ({
+  children,
+  collapseToFirstLine,
+}: {
+  children: PortableText;
+  collapseToFirstLine: boolean;
+}) => 
+  <ContextualCollapseReactNode collapseToFirstLine={collapseToFirstLine}>
+    <BlockContent blocks={children} serializers={serializers} />
+  </ContextualCollapseReactNode>
+
 
 export const ContextualCodeEmbed = ({ code }: { code: string }) => {
   const context = useCodeEmbedContext();
