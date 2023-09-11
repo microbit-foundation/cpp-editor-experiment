@@ -664,7 +664,7 @@ export class ProjectActions {
         );
         this.setSelection({ file: filenameWithExtension, location: { line: undefined } });
         this.actionFeedback.success({
-          title: this.intl.formatMessage({ id: "created-file" }, { filenameWithExtension }),
+          title: this.intl.formatMessage({ id: "created-file" }, { filename: filenameWithExtension }),
         });
       } catch (e) {
         this.actionFeedback.unexpectedError(e);

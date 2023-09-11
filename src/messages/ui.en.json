@@ -1,4 +1,23 @@
 {
+  "file-type-text": [
+    {
+      "type":0,
+      "value":"Select a file type:"
+    }
+  ],
+  "file-type-radio-source": [
+    {
+      "type":0,
+      "value":"C++ Source (.cpp)"
+    }
+  ],
+  "file-type-radio-header": [
+    {
+      "type":0,
+      "value":"C++ Header (.h)"
+    }
+  ],
+
   "about": [
     {
       "type": 0,
@@ -1036,7 +1055,21 @@
       "children": [
         {
           "type": 0,
-          "value": ".py"
+          "value": ".cpp"
+        }
+      ],
+      "type": 8,
+      "value": "code"
+    },
+    {
+      "type": 0,
+      "value": " or "
+    },
+    {
+      "children": [
+        {
+          "type": 0,
+          "value": ".h"
         }
       ],
       "type": 8,
@@ -1481,10 +1514,10 @@
       "value": "Save the project hex file to your computer"
     }
   ],
-  "save-python-action": [
+  "save-project-files-action": [
     {
       "type": 0,
-      "value": "Save Python script"
+      "value": "Save Project as zip"
     }
   ],
   "search": [
