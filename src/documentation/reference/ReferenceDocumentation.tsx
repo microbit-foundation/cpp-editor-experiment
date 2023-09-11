@@ -14,6 +14,7 @@ import DocumentationBreadcrumbHeading from "../common/DocumentationBreadcrumbHea
 import DocumentationContent from "../common/DocumentationContent";
 import DocumentationTopLevelItem from "../common/DocumentationTopLevelItem";
 import { isV2Only } from "../common/model";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import { getTopicAndEntry } from "./content";
 import { Toolkit } from "./model";
 import ReferenceTopicEntry from "./ReferenceTopicEntry";
@@ -87,7 +88,7 @@ const ActiveLevel = ({
           />
         }
       >
-        {topic.introduction && (
+        {topic.mdIntroduction && (
           <Box
             p={5}
             pb={1}
@@ -96,7 +97,8 @@ const ActiveLevel = ({
               ...docStyles,
             }}
           >
-            <DocumentationContent content={topic.introduction} />
+            <RenderedMarkdownContent keywordBlacklist={topic.keywordBlacklist} content={[topic.mdIntroduction!]}/>
+            {/* <DocumentationContent content={topic.introduction} /> */}
           </Box>
         )}
         <List flex="1 1 auto">

@@ -16,6 +16,7 @@ import DocumentationContent, {
 } from "../common/DocumentationContent";
 import DocumentationHeading from "../common/DocumentationHeading";
 import { isV2Only } from "../common/model";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import ShowMoreButton from "../common/ShowMoreButton";
 import Highlight from "./Highlight";
 import {
@@ -43,7 +44,7 @@ const ReferenceTopicEntry = ({
   entry,
   active,
 }: ToolkitTopicEntryProps) => {
-  const { content, detailContent, alternatives, alternativesLabel } = entry;
+  const { content, detailContent, mdDetailContent, alternatives, alternativesLabel } = entry;
   const activeAlterative = anchor?.id.split("/")[1];
   const [alternativeSlug, setAlternativeSlug] = useState<string | undefined>(
     alternatives && alternatives.length > 0
@@ -54,7 +55,7 @@ const ReferenceTopicEntry = ({
   );
   const activeAlterativeContent = alternatives?.find(
     (a) => a.slug.current === alternativeSlug
-  )?.content;
+  )?.mdContent;
 
   useEffect(() => {
     if (activeAlterative && active) {
@@ -68,7 +69,7 @@ const ReferenceTopicEntry = ({
 
   const hasMore =
     hasCode &&
-    (detailContent ||
+    (detailContent || mdDetailContent ||
       contentHasSomeNonCode(content) ||
       (alternatives && contentHasSomeNonCode(activeAlterativeContent)));
 
@@ -80,6 +81,12 @@ const ReferenceTopicEntry = ({
   );
   const disclosure = useDisclosure();
   const toolkitType = "reference";
+
+  const keywordBlacklist = [
+    ...(entry.keywordBlacklist || []), 
+    ...(entry.parent.keywordBlacklist || []),
+  ]
+
   return (
     <DocumentationContextProvider
       parentSlug={entry.slug.current}
@@ -118,14 +125,19 @@ const ReferenceTopicEntry = ({
             )}
           </HStack>
 
-          <DocumentationContent
+          <RenderedMarkdownContent 
+            keywordBlacklist={keywordBlacklist}
+            content={entry.mdContent!}
+          />
+
+          {/* <DocumentationContent
             content={content}
             details={
               hasMore
                 ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
                 : DocumentationCollapseMode.ShowAll
             }
-          />
+          /> */}
           {alternatives && typeof alternativeSlug === "string" && (
             <>
               <Flex wrap="wrap" as="label" mt={3}>
@@ -149,16 +161,22 @@ const ReferenceTopicEntry = ({
                 </Select>
               </Flex>
 
-              <DocumentationContent
+              {activeAlterativeContent && <RenderedMarkdownContent 
+                keywordBlacklist={keywordBlacklist}
+                content={activeAlterativeContent}
+              />}
+
+              {/* <DocumentationContent
                 details={DocumentationCollapseMode.ExpandCollapseExceptCode}
                 content={activeAlterativeContent}
-              />
+              /> */}
             </>
           )}
-          <DocumentationContent
+          {/* <DocumentationContent
             details={DocumentationCollapseMode.ExpandCollapseAll}
             content={detailContent}
-          />
+          /> */}
+          {mdDetailContent && <RenderedMarkdownContent keywordBlacklist={keywordBlacklist} content={entry.mdDetailContent!}/>}
         </Box>
       </Highlight>
     </DocumentationContextProvider>

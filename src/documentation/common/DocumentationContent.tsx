@@ -142,7 +142,7 @@ interface SerializerMarkProps<T> extends HasChildren {
   mark: T;
 }
 
-const ContextualCollapse = ({
+export const ContextualCollapse = ({
   children,
   collapseToFirstLine,
 }: {
@@ -163,7 +163,7 @@ const ContextualCollapse = ({
   );
 };
 
-const ContextualCodeEmbed = ({ code }: { code: string }) => {
+export const ContextualCodeEmbed = ({ code }: { code: string }) => {
   const context = useCodeEmbedContext();
   return (
     <Box mt={3}>
@@ -198,7 +198,7 @@ const serializers = {
       children: PortableText;
       collapseToFirstLine: boolean;
     }>) => <ContextualCollapse {...node} />,
-    python: ({ node: { main } }: SerializerNodeProps<ToolkitCode>) => (
+    cpp: ({ node: { main } }: SerializerNodeProps<ToolkitCode>) => (
       <ContextualCodeEmbed code={main} />
     ),
     simpleImage: (props: SerializerNodeProps<SimpleImage>) => {

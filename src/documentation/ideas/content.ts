@@ -6,8 +6,19 @@
 import { fetchContent } from "../../common/sanity";
 import { Idea } from "./model";
 
-export const fetchIdeas = async (languageId: string): Promise<Idea[]> =>
-  fetchContent(languageId, ideasQuery, adaptContent);
+export const fetchIdeas = async (languageId: string): Promise<Idea[]> => {
+  const response = await fetch("examples.json");
+  if (response.ok) {
+    const { result } = await response.json();
+    if (!result) {
+      throw new Error("Unexpected response format");
+    }
+    const content = adaptContent(result)
+    return content || [];
+  }
+  throw new Error("Error fetching content: " + response.status);
+}
+  // => fetchContent(languageId, ideasQuery, adaptContent);
 
 const ideasQuery = (languageId: string): string => {
   return `
@@ -29,7 +40,7 @@ const ideasQuery = (languageId: string): string => {
 };
 
 const adaptContent = (result: any): Idea[] | undefined => {
-  const ideas = result?.pythonIdeasOrder as Idea[];
+  const ideas = result as Idea[];
   if (!ideas) {
     return undefined;
   }
