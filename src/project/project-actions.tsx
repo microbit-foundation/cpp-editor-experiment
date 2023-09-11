@@ -287,7 +287,36 @@ export class ProjectActions {
       files.map((f) => getLowercaseFileExtension(f.name))
     );
 
-    if (!extensions.has("cpp")) {
+    //check for zip file first. If so unzip and treat contents as a multiple file upload
+    if(extensions.has("zip")) {
+      if (files.length > 1) {
+        this.actionFeedback.expectedError({
+          title: errorTitle,
+          description: "Expected one file with the extension .zip", //TODO: use this.intl.formatMessage
+        });
+      } else {
+        const zip = new JSZip();
+        const extracted = await zip.loadAsync(readFileAsUint8Array(files[0]));
+
+        const fileInputs : FileInput[] = [];
+        const filenames = Object.keys(extracted.files)
+
+        for (const filename of filenames) {
+            const content = await extracted.files[filename].async('uint8array');
+            const cppOrH = isCppFile(filename) || isHeaderFile(filename);
+            if (!cppOrH) return; //discard any none cpp or header files
+
+            fileInputs.push({
+              name: filename,
+              data: () => Promise.resolve(content),
+            })
+        }
+
+        if (fileInputs) {
+          return this.uploadInternal(fileInputs);
+        }
+      }
+    } else if (!extensions.has("cpp")) {
       this.actionFeedback.expectedError({
         title: errorTitle,
         description: "Selected file(s) do not include any C++ source files. Make sure you select at least one file ending in .cpp", //TODO: use this.intl.formatMessage

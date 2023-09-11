@@ -1209,7 +1209,7 @@
   "open-hover": [
     {
       "type": 0,
-      "value": "Open a hex or Python file or add other files"
+      "value": "Open a project .zip or select multiple files"
     }
   ],
   "options": [
