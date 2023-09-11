@@ -16,6 +16,7 @@ import { FSStorage } from "./storage";
 import { Host } from "./host";
 import { Logging } from "../logging/logging";
 import { ProjectFiles } from "./initial-project";
+import { lineNumFromUint8Array } from "../common/text-util";
 
 export const MAIN_FILE = "main.cpp";
 
@@ -157,10 +158,25 @@ export class BasicFileSystem extends EventEmitter implements FileSystem {
     }
 
     async statistics(): Promise<Statistics> {
-        throw new Error("Method not implemented.");
-    }
+        const currentMainFile = await this.storage.read(MAIN_FILE);
+        const files = await this.storage.ls();
+        let numMagicModules = 0;
 
-    //
+        const lines = 
+            this.cachedInitialProject &&
+            this.cachedInitialProject.files[MAIN_FILE] === fromByteArray(currentMainFile)
+                ? undefined
+                : lineNumFromUint8Array(currentMainFile)
+
+        const statistics: Statistics = {
+            lines,
+            files: files.length,
+            storageUsed: 0,
+            magicModules: numMagicModules,
+        }
+
+        return statistics;   
+    }
 
     private async notify() {
         const fileNames = await this.storage.ls();
