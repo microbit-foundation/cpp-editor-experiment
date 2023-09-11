@@ -15,7 +15,7 @@ import DocumentationContent, {
   DocumentationContextProvider,
 } from "../common/DocumentationContent";
 import DocumentationHeading from "../common/DocumentationHeading";
-import { isV2Only } from "../common/model";
+import { isV2Only, MarkdownContent } from "../common/model";
 import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import ShowMoreButton from "../common/ShowMoreButton";
 import Highlight from "./Highlight";
@@ -44,7 +44,7 @@ const ReferenceTopicEntry = ({
   entry,
   active,
 }: ToolkitTopicEntryProps) => {
-  const { content, detailContent, mdDetailContent, alternatives, alternativesLabel } = entry;
+  const { content, mdContent, detailContent, mdDetailContent, alternatives, alternativesLabel } = entry;
   const activeAlterative = anchor?.id.split("/")[1];
   const [alternativeSlug, setAlternativeSlug] = useState<string | undefined>(
     alternatives && alternatives.length > 0
@@ -64,13 +64,13 @@ const ReferenceTopicEntry = ({
   }, [active, activeAlterative]);
 
   const hasCode =
-    contentHasCode(content) ||
+    contentHasCode(mdContent) ||
     (alternatives && contentHasCode(activeAlterativeContent));
 
   const hasMore =
     hasCode &&
     (detailContent || mdDetailContent ||
-      contentHasSomeNonCode(content) ||
+      contentHasSomeNonCode(mdContent) ||
       (alternatives && contentHasSomeNonCode(activeAlterativeContent)));
 
   const handleSelectChange = useCallback(
@@ -128,16 +128,11 @@ const ReferenceTopicEntry = ({
           <RenderedMarkdownContent 
             keywordBlacklist={keywordBlacklist}
             content={entry.mdContent!}
+            collapseMode={hasMore
+              ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
+              : DocumentationCollapseMode.ShowAll}
           />
 
-          {/* <DocumentationContent
-            content={content}
-            details={
-              hasMore
-                ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
-                : DocumentationCollapseMode.ShowAll
-            }
-          /> */}
           {alternatives && typeof alternativeSlug === "string" && (
             <>
               <Flex wrap="wrap" as="label" mt={3}>
@@ -164,29 +159,39 @@ const ReferenceTopicEntry = ({
               {activeAlterativeContent && <RenderedMarkdownContent 
                 keywordBlacklist={keywordBlacklist}
                 content={activeAlterativeContent}
+                collapseMode={DocumentationCollapseMode.ExpandCollapseExceptCode}
               />}
-
-              {/* <DocumentationContent
-                details={DocumentationCollapseMode.ExpandCollapseExceptCode}
-                content={activeAlterativeContent}
-              /> */}
             </>
           )}
-          {/* <DocumentationContent
-            details={DocumentationCollapseMode.ExpandCollapseAll}
-            content={detailContent}
-          /> */}
-          {mdDetailContent && <RenderedMarkdownContent keywordBlacklist={keywordBlacklist} content={entry.mdDetailContent!}/>}
+          {mdDetailContent && <RenderedMarkdownContent 
+            keywordBlacklist={keywordBlacklist} 
+            content={entry.mdDetailContent!}
+            collapseMode={DocumentationCollapseMode.ExpandCollapseAll}
+          />}
         </Box>
       </Highlight>
     </DocumentationContextProvider>
   );
 };
 
-const contentHasSomeNonCode = (content: PortableText | undefined) =>
-  content && content.some((x) => x._type !== "python");
+const codeBlockRegex = /```[^`]*```/;
 
-const contentHasCode = (content: PortableText | undefined) =>
-  content && content.some((x) => x._type === "python");
+const contentHasSomeNonCode = (content: MarkdownContent[] | undefined) =>
+  content && content.some((c) => c._type !== "code" && markdownHasSomeNonCode(c.content));
+  
+const contentHasCode = (content: MarkdownContent[] | undefined) =>
+  content && content.some((c) => c._type === "code" || codeBlockRegex.test(c.content));
+
+const markdownHasSomeNonCode = (markdown: string) => {
+  const codeBlocks = markdown.match(codeBlockRegex);
+
+  if (!codeBlocks || codeBlocks.join('') === markdown) {
+    return false;
+  }
+
+  const nonCodeText = markdown.replace(codeBlockRegex, '');
+  const nonWhitespaceText = nonCodeText.replace(/\s/g, '');
+  return nonWhitespaceText.length > 0;
+}
 
 export default ReferenceTopicEntry;
