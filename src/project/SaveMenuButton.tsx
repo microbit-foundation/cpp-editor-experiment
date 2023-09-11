@@ -49,13 +49,6 @@ const SaveMenuButton = ({ size }: SaveMenuButtonProps) => {
             <MenuList zIndex={zIndexAboveTerminal}>
               <MenuItem
                 icon={<RiDownload2Line />}
-                onClick={() => actions.saveMainFile(menuButtonRef)}
-              >
-                <FormattedMessage id="save-python-action" />
-              </MenuItem>
-
-              <MenuItem
-                icon={<RiDownload2Line />}
                 onClick={() => actions.saveProjectFiles()}
               >
                 <FormattedMessage id="save-project-files-action" />
