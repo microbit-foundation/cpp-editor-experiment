@@ -292,7 +292,7 @@ export class ProjectActions {
       if (files.length > 1) {
         this.actionFeedback.expectedError({
           title: errorTitle,
-          description: "Expected one file with the extension .zip", //TODO: use this.intl.formatMessage
+          description: this.intl.formatMessage({ id: "open-error-multiple-zip" })
         });
       } else {
         const zip = new JSZip();
@@ -317,10 +317,17 @@ export class ProjectActions {
         }
       }
     } else if (!extensions.has("cpp")) {
-      this.actionFeedback.expectedError({
-        title: errorTitle,
-        description: "Selected file(s) do not include any C++ source files. Make sure you select at least one file ending in .cpp", //TODO: use this.intl.formatMessage
-      });
+      if (extensions.has("hex")) {
+        this.actionFeedback.expectedError({
+          title: errorTitle,
+          description: this.intl.formatMessage({ id: "open-error-hex" })
+        });
+      } else {
+        this.actionFeedback.expectedError({
+          title: errorTitle,
+          description: this.intl.formatMessage({ id: "open-error-not-cpp" })
+        });
+      }
     } else {
       const fileInputs : FileInput[] = [];
       for(const f of files) {

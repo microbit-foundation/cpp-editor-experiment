@@ -17,6 +17,24 @@
       "value":"C++ Header (.h)"
     }
   ],
+  "open-error-multiple-zip": [
+    {
+      "type":0,
+      "value":"Expected a single project zip file"
+    }
+  ],
+  "open-error-not-cpp": [
+    {
+      "type":0,
+      "value":"Selected file(s) do not include any C++ source files. Make sure you select at least one file ending in .cpp"
+    }
+  ],
+  "open-error-hex": [
+    {
+      "type":0,
+      "value":"Cannot use hex files to open projects in this editor"
+    }
+  ],
 
   "about": [
     {
