@@ -25,33 +25,20 @@
 //Modified from https://github.com/jprendes/emception
 
 import EmProcess from "./EmProcess.mjs";
-import WasmPackageModule from "./wasm/wasm-package.mjs";
-import BrotliProcess from "./BrotliProcess.mjs";
-import createLazyFile from "./emscripten/createLazyFile.mjs"
+import BusyBoxModule from "./wasm/busybox_unstripped.mjs";
 
 export default class FileSystem extends EmProcess {
-    _brotli = null;
     _cache = null;
     init = false;
 
     constructor({ cache = "/cache", ...opts } = {}) {
-        super(WasmPackageModule, { ...opts });
+        super(BusyBoxModule, { ...opts });
         this.#init(cache, opts);
     }
 
-    #init = async (cache, opts) => {
+    #init = async () => {
         await this;
-        this._brotli = await new BrotliProcess({ FS: this.FS, ...opts});
-        this._cache = (async () => {
-            while (cache.endsWith("/")) {
-                cache = cache.slice(0, -1);
-            }
-            if (this.exists(cache)) return cache;
-            this.persist(cache);
-            await this.pull();
-            this.init = true;
-            return cache;
-        })();
+        this.init = true;
     }
 
     async unpack(onProgress = (progress)=>{}, ...paths) {
@@ -59,25 +46,24 @@ export default class FileSystem extends EmProcess {
             const response = await fetch(path);
             const buffer = await this.getContent(response, onProgress);
 
-            if (path.endsWith(".br")) {
-                // it's a brotli file, decompress it
-                await this.FS.writeFile("/tmp/archive.pack.br", buffer);
-                
+            if (path.endsWith(".xz")) {
+                // it's an xz file, decompress it
+                await this.FS.writeFile("/tmp/archive.tar.xz", buffer);
+
                 // Ensure initialisation has happened (should await on wasm module here, but this can be difficult)
                 while (this.init===false) {await new Promise(r => setTimeout(r, 10))};
-
-                await this._brotli.exec(["brotli", "--decompress", "/tmp/archive.pack.br"], { cwd: "/tmp/" });
-                await this.FS.unlink("/tmp/archive.pack.br");
+                
+                // Use the "-k" flag to keep the compressed archive so we can remove ourselves.
+                await this.exec(["busybox", "xz", "-k", "-d", "archive.tar.xz"], { cwd: "/tmp/" });
+                await this.delete("/tmp/archive.tar.xz");
             } else {
-                await this.FS.writeFile("/tmp/archive.pack", buffer);
+                await this.FS.writeFile("/tmp/archive.tar", buffer);
             }
-            await this.exec(["wasm-package", "unpack", "/tmp/archive.pack"], { cwd: "/" });
-            await this.FS.unlink("/tmp/archive.pack");
-            
-            //Brotli isnt used after this.
+            await this.exec(["busybox", "tar", "xvf", "/tmp/archive.tar"], { cwd: "/" });
+            await this.delete("/tmp/archive.tar");
         }));
     }
-
+    
     //https://javascript.info/fetch-progress
     async getContent(response, onProgress = (progress)=>{}) {
         const contentLengthHeader = response.headers.get('Content-Length')
@@ -151,6 +137,10 @@ export default class FileSystem extends EmProcess {
         return this.FS.mkdir(...args)
     }
     unlink(...args) {
+        return this.FS.unlink(...args)
+    }
+    delete(...args){
+        this.FS.analyzePath(...args).object.contents = null;
         return this.FS.unlink(...args)
     }
     readFile(...args) {

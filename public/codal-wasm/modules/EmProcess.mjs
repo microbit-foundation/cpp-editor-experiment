@@ -64,7 +64,7 @@ export default class EmProcess extends Process {
                 },
             }
         };
-        this._module = await new Module({
+        this._module = await Module({
             ...opts,
             ...fsroot,
             noInitialRun: true,
