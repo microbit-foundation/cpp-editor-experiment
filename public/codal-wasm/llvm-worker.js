@@ -105,6 +105,7 @@ class LLVM {
                 
                         for (let tool in tools) {
                             await tools[tool];
+                            this.fileSystem.delete("/wasm/"+tool+".wasm");
                         };
                     }
                 },
