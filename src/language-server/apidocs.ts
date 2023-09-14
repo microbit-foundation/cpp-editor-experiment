@@ -123,6 +123,8 @@ const requestAPI = async (
     // params?: ApiDocsFunctionParameter[];
   }
 
+  return apiDocs;
+
   console.log(`[API] MicroBit`);
 
   // hacky for now. Need to wait for LSP to be ready to go before sending this request. Waits 5 seconds
