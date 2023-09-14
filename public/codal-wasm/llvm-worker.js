@@ -78,7 +78,7 @@ class LLVM {
                     weight: 95,
                     fn: async (progressCallback)=>{
                         this.fileSystem = await new FileSystem();
-                        await this.fileSystem.unpack(progressCallback, "./root.pack.br"); 
+                        await this.fileSystem.unpack(progressCallback, "./root.tar.xz"); 
                     }
                 },
                 {
@@ -105,6 +105,7 @@ class LLVM {
                 
                         for (let tool in tools) {
                             await tools[tool];
+                            this.fileSystem.delete("/wasm/"+tool+".wasm");
                         };
                     }
                 },
