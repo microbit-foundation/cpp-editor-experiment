@@ -1,6 +1,14 @@
 # micro:bit C++ Editor
 [![Netlify Status](https://api.netlify.com/api/v1/badges/d580cf5f-5420-4777-a663-c3233384be52/deploy-status)](https://app.netlify.com/sites/flourishing-taiyaki-76adeb/deploys)
 
+This is an experiment to build a C++ editor based on the micro:bit Python Editor.
+
+As such, this editor is not supported and it's not in the roadmap to be released.
+
+-----
+
+# micro:bit Python Editor V3
+
 This project is a web-based code editor that targets the [MicroPython](https://micropython.org) version of the [Python programming language](http://python.org/).
 
 Code written with this editor is expected to run on the [BBC micro:bit device](https://microbit.org).
