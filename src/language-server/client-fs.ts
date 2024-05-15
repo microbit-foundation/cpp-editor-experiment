@@ -3,9 +3,8 @@
  *
  * SPDX-License-Identifier: MIT
  */
-import { CreateFile, DeleteFile } from "vscode-languageserver-protocol";
-import { diff, EVENT_PROJECT_UPDATED, FileSystem, Project } from "../fs/fs";
-import { createUri, LanguageServerClient } from "./client";
+import { EVENT_PROJECT_UPDATED, FileSystem, Project, diff } from "../fs/fs";
+import { LanguageServerClient, createUri } from "./client";
 
 export type FsChangesListener = (current: Project) => any;
 
@@ -29,7 +28,7 @@ export const trackFsChanges = (
   const documentText = async (name: string) =>
     new TextDecoder().decode((await fs.read(name)).data);
   const diffAndUpdateClient = async (current: Project) => {
-    const changes = diff(previous, current)//.filter((c) => isPythonFile(c.name));  //filter for cpp/h ?
+    const changes = diff(previous, current); //.filter((c) => isPythonFile(c.name));  //filter for cpp/h ?
     previous = current;
     for (const change of changes) {
       const uri = createUri(change.name);

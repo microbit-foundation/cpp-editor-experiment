@@ -7,7 +7,6 @@ import { Box, BoxProps, Flex, useMediaQuery } from "@chakra-ui/react";
 import React, { ForwardedRef } from "react";
 import { useIntl } from "react-intl";
 import { widthXl } from "../common/media-queries";
-import HideSplitViewButton from "../common/SplitView/HideSplitViewButton";
 import { topBarHeight } from "../deployment/misc";
 import ZoomControls from "../editor/ZoomControls";
 import ProjectNameEditable from "../project/ProjectNameEditable";
@@ -27,11 +26,7 @@ interface EditorAreaProps extends BoxProps {
  */
 const EditorArea = React.forwardRef(
   (
-    {
-      selection,
-      onSelectedFileChanged,
-      ...props
-    }: EditorAreaProps,
+    { selection, onSelectedFileChanged, ...props }: EditorAreaProps,
     simulatorButtonRef: ForwardedRef<HTMLButtonElement>
   ) => {
     const intl = useIntl();

@@ -4,17 +4,14 @@
  * SPDX-License-Identifier: MIT
  */
 import {
-  ProtocolRequestType,
   CompletionItem,
   CompletionItemKind,
-  CompletionResolveRequest,
   CompletionTriggerKind,
-  HoverRequest
+  HoverRequest,
+  ProtocolRequestType,
 } from "vscode-languageserver-protocol";
-import { Hover, MarkupContent, MarkupKind, Position } from "vscode-languageserver-types";
+import { Hover, MarkupContent, MarkupKind } from "vscode-languageserver-types";
 import { LanguageServerClient, createUri } from "./client";
-
-
 
 // This duplicates the types we added to Pyright.
 
@@ -65,7 +62,6 @@ export const apiDocsRequestType = new ProtocolRequestType<
 export const apiDocs = (
   client: LanguageServerClient
 ): Promise<ApiDocsResponse> => {
-
   return requestAPI(client, "MicroBit");
 
   // // This is a non-standard LSP call that we've added support for to Pyright.
@@ -96,7 +92,6 @@ export const apiDocs = (
   // });
 };
 
-
 const uri = createUri("temp.cpp");
 const text = `#include "MicroBit.h"
 
@@ -109,8 +104,8 @@ int main() {
 const requestAPI = async (
   client: LanguageServerClient,
   classname: string
-) : Promise<ApiDocsResponse> => {
-  const apiDocs : ApiDocsResponse = {};
+): Promise<ApiDocsResponse> => {
+  const apiDocs: ApiDocsResponse = {};
   apiDocs["MicroBit"] = {
     id: "MicroBit",
     name: "MicroBit",
@@ -121,7 +116,7 @@ const requestAPI = async (
     // children?: ApiDocsEntry[];
     // baseClasses?: ApiDocsBaseClass[];
     // params?: ApiDocsFunctionParameter[];
-  }
+  };
 
   console.log(`[API] MicroBit`);
 
@@ -147,33 +142,35 @@ const requestAPI = async (
       uri,
     },
     position: {
-      line:5,
+      line: 5,
       character: 9,
     },
     context: {
       triggerKind: CompletionTriggerKind.TriggerCharacter,
-      triggerCharacter: '.',
+      triggerCharacter: ".",
     },
   });
 
-  const items = results.items
+  const items = results.items;
 
   let children: ApiDocsEntry[] = [];
   // Request docs for each item
-  for(let i in items) {
+  for (let i in items) {
     const name = items[i].insertText || items[i].label;
 
-    console.log(`[API] MicroBit -> ${name}`)
-    const docsInfo : Hover = await requestMemberDocs(client, items[i]);
-
+    console.log(`[API] MicroBit -> ${name}`);
+    const docsInfo: Hover = await requestMemberDocs(client, items[i]);
 
     children.push({
       id: name,
       name: name,
       fullName: `MicroBit.${name}`,
-      docString: docsInfo.contents ? resolveDocsToString(docsInfo.contents) : "",
-      kind: items[i].kind === CompletionItemKind.Method ? "function" : "variable",
-    })
+      docString: docsInfo.contents
+        ? resolveDocsToString(docsInfo.contents)
+        : "",
+      kind:
+        items[i].kind === CompletionItemKind.Method ? "function" : "variable",
+    });
   }
 
   apiDocs["MicroBit"].children = children;
@@ -184,47 +181,52 @@ const requestAPI = async (
       uri,
     },
   });
-  
-  console.log(`[API] API Request Complete`)
-  return apiDocs;
-}
 
-const requestMemberDocs = async (client: LanguageServerClient, item: CompletionItem) => {
+  console.log(`[API] API Request Complete`);
+  return apiDocs;
+};
+
+const requestMemberDocs = async (
+  client: LanguageServerClient,
+  item: CompletionItem
+) => {
   client.didChangeTextDocument(uri, [
     {
-      text : `#include "MicroBit.h"
+      text: `#include "MicroBit.h"
 
 MicroBit uBit;
         
 int main() {
-    uBit.${item.insertText}${item.kind === CompletionItemKind.Method ? '()' : ''};
+    uBit.${item.insertText}${
+        item.kind === CompletionItemKind.Method ? "()" : ""
+      };
 }`,
     },
   ]);
 
   // await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const response : Hover = await client.connection.sendRequest(
-    HoverRequest.method, 
+  const response: Hover = await client.connection.sendRequest(
+    HoverRequest.method,
     {
       textDocument: {
         uri,
       },
       position: {
-        line:5,
+        line: 5,
         character: 11,
       },
     }
-  )
+  );
 
   return response;
-}
+};
 
-const resolveDocsToString = (docs : any) : string => {
+const resolveDocsToString = (docs: any): string => {
   if (typeof docs === typeof MarkupContent) {
     const markup: MarkupContent = docs as MarkupContent;
     return markup.value;
   } else {
     return docs;
   }
-}
+};

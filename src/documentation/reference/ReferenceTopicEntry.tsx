@@ -8,16 +8,15 @@ import { useDisclosure } from "@chakra-ui/react";
 import { Select } from "@chakra-ui/select";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { docStyles } from "../../common/documentation-styles";
-import { PortableText } from "../../common/sanity";
 import { Anchor } from "../../router-hooks";
-import DocumentationContent, {
+import {
   DocumentationCollapseMode,
   DocumentationContextProvider,
 } from "../common/DocumentationContent";
 import DocumentationHeading from "../common/DocumentationHeading";
-import { isV2Only, MarkdownContent } from "../common/model";
 import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 import ShowMoreButton from "../common/ShowMoreButton";
+import { MarkdownContent, isV2Only } from "../common/model";
 import Highlight from "./Highlight";
 import {
   ToolkitTopic,
@@ -44,7 +43,13 @@ const ReferenceTopicEntry = ({
   entry,
   active,
 }: ToolkitTopicEntryProps) => {
-  const { content, mdContent, detailContent, mdDetailContent, alternatives, alternativesLabel } = entry;
+  const {
+    mdContent,
+    detailContent,
+    mdDetailContent,
+    alternatives,
+    alternativesLabel,
+  } = entry;
   const activeAlterative = anchor?.id.split("/")[1];
   const [alternativeSlug, setAlternativeSlug] = useState<string | undefined>(
     alternatives && alternatives.length > 0
@@ -69,7 +74,8 @@ const ReferenceTopicEntry = ({
 
   const hasMore =
     hasCode &&
-    (detailContent || mdDetailContent ||
+    (detailContent ||
+      mdDetailContent ||
       contentHasSomeNonCode(mdContent) ||
       (alternatives && contentHasSomeNonCode(activeAlterativeContent)));
 
@@ -83,9 +89,9 @@ const ReferenceTopicEntry = ({
   const toolkitType = "reference";
 
   const keywordBlacklist = [
-    ...(entry.keywordBlacklist || []), 
+    ...(entry.keywordBlacklist || []),
     ...(entry.parent.keywordBlacklist || []),
-  ]
+  ];
 
   return (
     <DocumentationContextProvider
@@ -125,12 +131,14 @@ const ReferenceTopicEntry = ({
             )}
           </HStack>
 
-          <RenderedMarkdownContent 
+          <RenderedMarkdownContent
             keywordBlacklist={keywordBlacklist}
             content={entry.mdContent!}
-            collapseMode={hasMore
-              ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
-              : DocumentationCollapseMode.ShowAll}
+            collapseMode={
+              hasMore
+                ? DocumentationCollapseMode.ExpandCollapseExceptCodeAndFirstLine
+                : DocumentationCollapseMode.ShowAll
+            }
           />
 
           {alternatives && typeof alternativeSlug === "string" && (
@@ -156,18 +164,24 @@ const ReferenceTopicEntry = ({
                 </Select>
               </Flex>
 
-              {activeAlterativeContent && <RenderedMarkdownContent 
-                keywordBlacklist={keywordBlacklist}
-                content={activeAlterativeContent}
-                collapseMode={DocumentationCollapseMode.ExpandCollapseExceptCode}
-              />}
+              {activeAlterativeContent && (
+                <RenderedMarkdownContent
+                  keywordBlacklist={keywordBlacklist}
+                  content={activeAlterativeContent}
+                  collapseMode={
+                    DocumentationCollapseMode.ExpandCollapseExceptCode
+                  }
+                />
+              )}
             </>
           )}
-          {mdDetailContent && <RenderedMarkdownContent 
-            keywordBlacklist={keywordBlacklist} 
-            content={entry.mdDetailContent!}
-            collapseMode={DocumentationCollapseMode.ExpandCollapseAll}
-          />}
+          {mdDetailContent && (
+            <RenderedMarkdownContent
+              keywordBlacklist={keywordBlacklist}
+              content={entry.mdDetailContent!}
+              collapseMode={DocumentationCollapseMode.ExpandCollapseAll}
+            />
+          )}
         </Box>
       </Highlight>
     </DocumentationContextProvider>
@@ -177,21 +191,23 @@ const ReferenceTopicEntry = ({
 const codeBlockRegex = /```[^`]*```/;
 
 const contentHasSomeNonCode = (content: MarkdownContent[] | undefined) =>
-  content && content.some((c) => c._type !== "code" && markdownHasSomeNonCode(c.content));
-  
+  content &&
+  content.some((c) => c._type !== "code" && markdownHasSomeNonCode(c.content));
+
 const contentHasCode = (content: MarkdownContent[] | undefined) =>
-  content && content.some((c) => c._type === "code" || codeBlockRegex.test(c.content));
+  content &&
+  content.some((c) => c._type === "code" || codeBlockRegex.test(c.content));
 
 const markdownHasSomeNonCode = (markdown: string) => {
   const codeBlocks = markdown.match(codeBlockRegex);
 
-  if (!codeBlocks || codeBlocks.join('') === markdown) {
+  if (!codeBlocks || codeBlocks.join("") === markdown) {
     return false;
   }
 
-  const nonCodeText = markdown.replace(codeBlockRegex, '');
-  const nonWhitespaceText = nonCodeText.replace(/\s/g, '');
+  const nonCodeText = markdown.replace(codeBlockRegex, "");
+  const nonWhitespaceText = nonCodeText.replace(/\s/g, "");
   return nonWhitespaceText.length > 0;
-}
+};
 
 export default ReferenceTopicEntry;

@@ -72,6 +72,7 @@ export const autocompletion = (
           }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const documentationResolver = createDocumentationResolver(
           client,
           intl,
@@ -103,16 +104,18 @@ export const autocompletion = (
                   label: item.label,
                   apply: (view, completion, from, to) => {
                     logging.event({ type: "autocomplete-accept" });
-                    const insert = item.insertText ? item.insertText : item.label;
+                    const insert = item.insertText
+                      ? item.insertText
+                      : item.label;
                     const transactions: TransactionSpec[] = [
                       {
                         changes: { from, to, insert },
-                        selection: { anchor: from + insert.length},
+                        selection: { anchor: from + insert.length },
                       },
                     ];
                     if (
                       // funcParensDisabled is set to true by Pyright for e.g. a function completion in an import
-                      (completion.type === "function") ||
+                      completion.type === "function" ||
                       completion.type === "method"
                     ) {
                       const bracketTransaction = insertBracket(view.state, "(");

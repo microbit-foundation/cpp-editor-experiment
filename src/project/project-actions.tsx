@@ -19,9 +19,9 @@ import PostSaveDialog, { PostSaveChoice } from "../common/PostSaveDialog";
 import { ActionFeedback } from "../common/use-action-feedback";
 import { Dialogs } from "../common/use-dialogs";
 import {
+  ConnectOptions,
   ConnectionAction,
   ConnectionStatus,
-  ConnectOptions,
   DeviceConnection,
   EVENT_END_USB_SELECT,
   HexGenerationError,
@@ -29,17 +29,12 @@ import {
   WebUSBErrorCode,
 } from "../device/device";
 import { FileSystem, MAIN_FILE, Statistics, VersionAction } from "../fs/fs";
-import {
-  getLowercaseFileExtension,
-  isPythonMicrobitModule,
-  readFileAsText,
-  readFileAsUint8Array,
-} from "../fs/fs-util";
+import { getLowercaseFileExtension, readFileAsUint8Array } from "../fs/fs-util";
 import { HexGenerator } from "../fs/hex-gen";
 import {
+  ProjectFiles,
   defaultInitialProject,
   projectFilesToBase64,
-  ProjectFiles,
 } from "../fs/initial-project";
 import { LanguageServerClient } from "../language-server/client";
 import { Logging } from "../logging/logging";
@@ -57,24 +52,17 @@ import TransferHexDialog, {
 } from "../workbench/connect-dialogs/TransferHexDialog";
 import WebUSBDialog from "../workbench/connect-dialogs/WebUSBDialog";
 import { WorkbenchSelection } from "../workbench/use-selection";
+import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
+import CreateFileQuestion from "./CreateFile";
+import ProjectNameQuestion from "./ProjectNameQuestion";
 import {
   ClassifiedFileInput,
   FileChange,
   FileInput,
   FileOperation,
 } from "./changes";
-import ChooseMainScriptQuestion from "./ChooseMainScriptQuestion";
-import CreateFileQuestion from "./CreateFile";
 import { DefaultedProject } from "./project-hooks";
-import {
-  ensureCppExtension,
-  ensurePythonExtension,
-  isCppFile,
-  isHeaderFile,
-  isPythonFile,
-  validateNewFilename,
-} from "./project-utils";
-import ProjectNameQuestion from "./ProjectNameQuestion";
+import { isCppFile, isHeaderFile, validateNewFilename } from "./project-utils";
 
 /**
  * Distinguishes the different ways to trigger the load action.
@@ -288,28 +276,30 @@ export class ProjectActions {
     );
 
     //check for zip file first. If so unzip and treat contents as a multiple file upload
-    if(extensions.has("zip")) {
+    if (extensions.has("zip")) {
       if (files.length > 1) {
         this.actionFeedback.expectedError({
           title: errorTitle,
-          description: this.intl.formatMessage({ id: "open-error-multiple-zip" })
+          description: this.intl.formatMessage({
+            id: "open-error-multiple-zip",
+          }),
         });
       } else {
         const zip = new JSZip();
         const extracted = await zip.loadAsync(readFileAsUint8Array(files[0]));
 
-        const fileInputs : FileInput[] = [];
-        const filenames = Object.keys(extracted.files)
+        const fileInputs: FileInput[] = [];
+        const filenames = Object.keys(extracted.files);
 
         for (const filename of filenames) {
-            const content = await extracted.files[filename].async('uint8array');
-            const cppOrH = isCppFile(filename) || isHeaderFile(filename);
-            if (!cppOrH) return; //discard any none cpp or header files
+          const content = await extracted.files[filename].async("uint8array");
+          const cppOrH = isCppFile(filename) || isHeaderFile(filename);
+          if (!cppOrH) return; //discard any none cpp or header files
 
-            fileInputs.push({
-              name: filename,
-              data: () => Promise.resolve(content),
-            })
+          fileInputs.push({
+            name: filename,
+            data: () => Promise.resolve(content),
+          });
         }
 
         if (fileInputs) {
@@ -320,17 +310,17 @@ export class ProjectActions {
       if (extensions.has("hex")) {
         this.actionFeedback.expectedError({
           title: errorTitle,
-          description: this.intl.formatMessage({ id: "open-error-hex" })
+          description: this.intl.formatMessage({ id: "open-error-hex" }),
         });
       } else {
         this.actionFeedback.expectedError({
           title: errorTitle,
-          description: this.intl.formatMessage({ id: "open-error-not-cpp" })
+          description: this.intl.formatMessage({ id: "open-error-not-cpp" }),
         });
       }
     } else {
-      const fileInputs : FileInput[] = [];
-      for(const f of files) {
+      const fileInputs: FileInput[] = [];
+      for (const f of files) {
         const content = await readFileAsUint8Array(f);
         const cppOrH = isCppFile(f.name) || isHeaderFile(f.name);
         if (!cppOrH) continue; //discard any none cpp or header files
@@ -338,14 +328,14 @@ export class ProjectActions {
         fileInputs.push({
           name: f.name,
           data: () => Promise.resolve(content),
-        })
+        });
       }
 
       if (fileInputs) {
         return this.uploadInternal(fileInputs);
       }
-    };
-  }
+    }
+  };
 
   /**
    * Open a project, asking for confirmation if required.
@@ -587,7 +577,6 @@ export class ProjectActions {
     }
   };
 
- 
   saveProjectFiles = async () => {
     this.logging.event({
       type: "save-project-files",
@@ -595,21 +584,22 @@ export class ProjectActions {
 
     try {
       const files: Record<string, Uint8Array> = await this.fs.files();
-      const zipName = (this.fs.project.name || "untitled project").replace(" ", "_");
+      const zipName = (this.fs.project.name || "untitled project").replace(
+        " ",
+        "_"
+      );
       const zip = new JSZip();
 
-      for(const filename in files) {
+      for (const filename in files) {
         const blob = new Blob([files[filename]], {
           type: "application/octet-stream",
         });
         zip.file(filename, blob);
       }
 
-      zip.generateAsync({ type: 'blob' }).then(function (content) {
+      zip.generateAsync({ type: "blob" }).then(function (content) {
         saveAs(content, zipName + ".zip");
       });
-      
-
     } catch (e: any) {
       this.actionFeedback.unexpectedError(e);
     }
@@ -670,23 +660,25 @@ export class ProjectActions {
     const preexistingFiles = new Set(this.project.files.map((f) => f.name));
     const validate = (filename: string) =>
       validateNewFilename(filename, (f) => preexistingFiles.has(f), this.intl);
-    const filenameWithExtension = await this.dialogs.show<
-      string | undefined
-    >((callback) => (
-      <InputDialog
-        callback={callback}
-        header={this.intl.formatMessage({ id: "create-python" })}
-        Body={CreateFileQuestion}
-        initialValue=""
-        actionLabel={this.intl.formatMessage({ id: "create-action" })}
-        validate={validate}
-        customFocus
-      />
-    ));
+    const filenameWithExtension = await this.dialogs.show<string | undefined>(
+      (callback) => (
+        <InputDialog
+          callback={callback}
+          header={this.intl.formatMessage({ id: "create-python" })}
+          Body={CreateFileQuestion}
+          initialValue=""
+          actionLabel={this.intl.formatMessage({ id: "create-action" })}
+          validate={validate}
+          customFocus
+        />
+      )
+    );
 
     if (filenameWithExtension) {
       const cppTemplate = "// Your new file!";
-      const headerName = filenameWithExtension?.toUpperCase().replaceAll('.', '_');
+      const headerName = filenameWithExtension
+        ?.toUpperCase()
+        .replaceAll(".", "_");
       const headerTemplate = `#ifndef ${headerName}\n#define ${headerName}\n\n// Your new header file!\n\n#endif`;
 
       this.logging.event({
@@ -695,12 +687,18 @@ export class ProjectActions {
       try {
         await this.fs.write(
           filenameWithExtension,
-          filenameWithExtension.endsWith('.h') ? headerTemplate : cppTemplate, //could be a better way of checking file type?
+          filenameWithExtension.endsWith(".h") ? headerTemplate : cppTemplate, //could be a better way of checking file type?
           VersionAction.INCREMENT
         );
-        this.setSelection({ file: filenameWithExtension, location: { line: undefined } });
+        this.setSelection({
+          file: filenameWithExtension,
+          location: { line: undefined },
+        });
         this.actionFeedback.success({
-          title: this.intl.formatMessage({ id: "created-file" }, { filename: filenameWithExtension }),
+          title: this.intl.formatMessage(
+            { id: "created-file" },
+            { filename: filenameWithExtension }
+          ),
         });
       } catch (e) {
         this.actionFeedback.unexpectedError(e);
@@ -1043,6 +1041,7 @@ export class ProjectActions {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const isMakeCodeForV1Hex = (hexStr: string) => {
   try {
     return isMakeCodeForV1HexNoErrorHandling(hexStr);

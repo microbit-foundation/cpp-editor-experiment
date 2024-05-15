@@ -12,9 +12,9 @@ import { useDevice } from "../device/device-hooks";
 import { EVENT_PROJECT_UPDATED, Project, VersionAction } from "../fs/fs";
 import { useFileSystem } from "../fs/fs-hooks";
 import {
+  ModuleData,
   extractModuleData,
   isPythonMicrobitModule,
-  ModuleData,
 } from "../fs/fs-util";
 import { useHexGeneration } from "../fs/hex-hooks";
 import { useLanguageServerClient } from "../language-server/language-server-hooks";
@@ -22,7 +22,7 @@ import { useLogging } from "../logging/logging-hooks";
 import { useSessionSettings } from "../settings/session-settings";
 import { useSettings } from "../settings/settings";
 import { useSelection } from "../workbench/use-selection";
-import { defaultedProject, ProjectActions } from "./project-actions";
+import { ProjectActions, defaultedProject } from "./project-actions";
 
 /**
  * Hook exposing the main UI actions.
@@ -56,17 +56,18 @@ export const useProjectActions = (): ProjectActions => {
       ),
     [
       fs,
+      hexGen,
       device,
       actionFeedback,
       dialogs,
       setSelection,
-      intl,
-      logging,
-      client,
       settings,
       setSettings,
       sessionSettings,
       setSessionSettings,
+      intl,
+      logging,
+      client,
     ]
   );
   return actions;

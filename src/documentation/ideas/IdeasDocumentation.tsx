@@ -4,24 +4,21 @@
  * SPDX-License-Identifier: MIT
  */
 import { Link, Stack, Text } from "@chakra-ui/layout";
-import { Image, SimpleGrid } from "@chakra-ui/react";
+import { SimpleGrid } from "@chakra-ui/react";
 import { ReactNode, useCallback, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import AreaHeading from "../../common/AreaHeading";
-import { docStyles } from "../../common/documentation-styles";
 import HeadedScrollablePanel from "../../common/HeadedScrollablePanel";
-import { getAspectRatio, imageUrlBuilder } from "../../common/imageUrlBuilder";
+import { docStyles } from "../../common/documentation-styles";
 import { useResizeObserverContentRect } from "../../common/use-resize-observer";
 import { Anchor, useRouterTabSlug } from "../../router-hooks";
-import { useAnimationDirection } from "../common/documentation-animation-hooks";
 import DocumentationBreadcrumbHeading from "../common/DocumentationBreadcrumbHeading";
-import DocumentationContent, {
-  DocumentationContextProvider,
-} from "../common/DocumentationContent";
+import { DocumentationContextProvider } from "../common/DocumentationContent";
+import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
+import { useAnimationDirection } from "../common/documentation-animation-hooks";
 import { isV2Only } from "../common/model";
 import IdeaCard from "./IdeaCard";
 import { Idea } from "./model";
-import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
 
 interface IdeasDocumentationProps {
   ideas: Idea[];

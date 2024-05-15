@@ -7,19 +7,20 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { polyfill } from "mobile-drag-drop";
 import { useEffect } from "react";
 import "./App.css";
-import { DialogProvider } from "./common/use-dialogs";
 import VisualViewPortCSSVariables from "./common/VisualViewportCSSVariables";
+import { DialogProvider } from "./common/use-dialogs";
 import { deployment, useDeployment } from "./deployment";
-import { MicrobitWebUSBConnection } from "./device/webusb";
 import { DeviceContextProvider } from "./device/device-hooks";
 import { MockDeviceConnection } from "./device/mock";
+import { MicrobitWebUSBConnection } from "./device/webusb";
 import DocumentationProvider from "./documentation/documentation-hooks";
 import SearchProvider from "./documentation/search/search-hooks";
 import { ActiveEditorProvider } from "./editor/active-editor-hooks";
-import { _FileSystem } from "./fs/fs";
+import { BasicFileSystem } from "./fs/basic-fs";
 import { FileSystemProvider } from "./fs/fs-hooks";
+import { ClangHexGenerator } from "./fs/hex-gen";
+import { HexGenProvider } from "./fs/hex-hooks";
 import { createHost } from "./fs/host";
-import { fetchMicroPython } from "./micropython/micropython";
 import { LanguageServerClientProvider } from "./language-server/language-server-hooks";
 import { LoggingProvider } from "./logging/logging-hooks";
 import TranslationProvider from "./messages/TranslationProvider";
@@ -28,11 +29,8 @@ import { RouterProvider } from "./router-hooks";
 import SessionSettingsProvider from "./settings/session-settings";
 import SettingsProvider from "./settings/settings";
 import BeforeUnloadDirtyCheck from "./workbench/BeforeUnloadDirtyCheck";
-import { SelectionProvider } from "./workbench/use-selection";
 import Workbench from "./workbench/Workbench";
-import { ClangHexGenerator } from "./fs/hex-gen";
-import { HexGenProvider } from "./fs/hex-hooks";
-import { BasicFileSystem } from "./fs/basic-fs";
+import { SelectionProvider } from "./workbench/use-selection";
 
 const isMockDeviceMode = () =>
   // We use a cookie set from the e2e tests. Avoids having separate test and live builds.
@@ -53,7 +51,6 @@ const hexGenerator = new ClangHexGenerator(bfs);
 // If this fails then we retry on access.
 // fs.initializeInBackground();
 bfs.initialize(); //should be able to get away with just letting this run since clang also has to initialise, which takes significantly longer
-
 
 const App = () => {
   useEffect(() => {

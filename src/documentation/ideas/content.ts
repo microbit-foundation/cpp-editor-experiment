@@ -3,7 +3,6 @@
  *
  * SPDX-License-Identifier: MIT
  */
-import { fetchContent } from "../../common/sanity";
 import { Idea } from "./model";
 
 export const fetchIdeas = async (languageId: string): Promise<Idea[]> => {
@@ -13,13 +12,14 @@ export const fetchIdeas = async (languageId: string): Promise<Idea[]> => {
     if (!result) {
       throw new Error("Unexpected response format");
     }
-    const content = adaptContent(result)
+    const content = adaptContent(result);
     return content || [];
   }
   throw new Error("Error fetching content: " + response.status);
-}
-  // => fetchContent(languageId, ideasQuery, adaptContent);
+};
+// => fetchContent(languageId, ideasQuery, adaptContent);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ideasQuery = (languageId: string): string => {
   return `
     *[_type == "pythonIdeasConfig" && language == "${languageId}" && !(_id in path("drafts.**"))][0]{

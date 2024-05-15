@@ -6,18 +6,17 @@
 import { Box, Divider, List, ListItem } from "@chakra-ui/layout";
 import { useCallback } from "react";
 import { useIntl } from "react-intl";
-import { docStyles } from "../../common/documentation-styles";
 import HeadedScrollablePanel from "../../common/HeadedScrollablePanel";
+import { docStyles } from "../../common/documentation-styles";
 import { Anchor, useRouterTabSlug } from "../../router-hooks";
-import { useAnimationDirection } from "../common/documentation-animation-hooks";
 import DocumentationBreadcrumbHeading from "../common/DocumentationBreadcrumbHeading";
-import DocumentationContent from "../common/DocumentationContent";
 import DocumentationTopLevelItem from "../common/DocumentationTopLevelItem";
-import { isV2Only } from "../common/model";
 import { RenderedMarkdownContent } from "../common/RenderedMarkdownContent";
+import { useAnimationDirection } from "../common/documentation-animation-hooks";
+import { isV2Only } from "../common/model";
+import ReferenceTopicEntry from "./ReferenceTopicEntry";
 import { getTopicAndEntry } from "./content";
 import { Toolkit } from "./model";
-import ReferenceTopicEntry from "./ReferenceTopicEntry";
 
 interface ReferenceDocumentationProps {
   toolkit: Toolkit;
@@ -97,7 +96,10 @@ const ActiveLevel = ({
               ...docStyles,
             }}
           >
-            <RenderedMarkdownContent keywordBlacklist={topic.keywordBlacklist} content={[topic.mdIntroduction!]}/>
+            <RenderedMarkdownContent
+              keywordBlacklist={topic.keywordBlacklist}
+              content={[topic.mdIntroduction!]}
+            />
             {/* <DocumentationContent content={topic.introduction} /> */}
           </Box>
         )}
