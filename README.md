@@ -1,5 +1,4 @@
 # micro:bit C++ Editor
-[![Netlify Status](https://api.netlify.com/api/v1/badges/d580cf5f-5420-4777-a663-c3233384be52/deploy-status)](https://app.netlify.com/sites/flourishing-taiyaki-76adeb/deploys)
 
 This is an experiment to build a C++ editor based on the micro:bit Python Editor.
 
